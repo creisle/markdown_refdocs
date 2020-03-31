@@ -4,6 +4,22 @@
 
 Extracts docstings and type annotations from a python package to generate reference documentation in markdown
 
+## Getting Started
+
+Install the package from pip
+
+```bash
+pip install markdown_refdocs
+```
+
+Run this from the command line or import the function to get the markdown returns as strings and
+customize. This tool has the customary help manu you can view with the `-h` option to see the
+options documentation
+
+```bash
+markdown_refdocs -h
+```
+
 ## Features
 
 - parses google-style docstrings
@@ -25,21 +41,6 @@ number of plugins which extract docstrings from python files, however none of th
 are able to use the google docstring format which I prefer. If you're using a different docstring
 format you can check them out here on the [Mkdocs plugin wiki](https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins#api-documentation-building).
 
-## Getting Started
-
-Install the package from pip
-
-```bash
-pip install markdown_refdocs
-```
-
-Run this from the command line or import the function to get the markdown returns as strings and
-customize. This tool has the customary help manu you can view with the `-h` option to see the
-options documentation
-
-```bash
-markdown_refdocs -h
-```
 
 
 
