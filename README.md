@@ -1,8 +1,9 @@
 # Markdown Refdocs
 
-![Python package](https://github.com/creisle/markdown_refdocs/workflows/Python%20package/badge.svg?branch=master)
+![Python package](https://github.com/creisle/markdown_refdocs/workflows/Python%20package/badge.svg?branch=master) ![Docs](https://github.com/creisle/markdown_refdocs/workflows/Docs/badge.svg?branch=master)
 
-Extracts docstings and type annotations from a python package to generate reference documentation in markdown
+Extracts docstings and type annotations from a python package to generate reference documentation in markdown. 
+See an example of this at: https://creisle.github.io/markdown_refdocs/
 
 ## Getting Started
 
