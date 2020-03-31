@@ -8,3 +8,5 @@ htmlcov
 .coverage
 build-docs
 docs/reference
+build
+dist

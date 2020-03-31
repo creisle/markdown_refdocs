@@ -13,9 +13,22 @@ DOC_REQS = ['mkdocs', 'mkdocs-material']
 
 DEV_REQS = TEST_REQS + DEPLOYMENT_REQS + DOC_REQS + ['black', 'flake8', 'flake8-annotations']
 
+long_description = ''
+
+try:
+    import os
+
+    with open(os.path.join(os.path.dirname(__file__), 'README.md'), 'r') as fh:
+        long_description = fh.read()
+except Exception as err:
+    print(err)
+    pass
+
 setup(
     name='markdown_refdocs',
-    version='1.0.0',
+    version='1.0.1',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     packages=find_packages(),
     install_requires=INSTALL_REQS,
     extras_require={
