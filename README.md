@@ -1,6 +1,6 @@
 # Docstring Extractor
 
-Note: currently only supports google-style docstrings. May add support for others later if requested.
+![Python package](https://github.com/creisle/markdown_refdocs/workflows/Python%20package/badge.svg?branch=master)
 
 Yet another docstring extraction pacakge. The motivation for this package was that writing docs in
 markdown is simpler to read and write than writing them in RST. There is an awesome package called
@@ -16,6 +16,10 @@ format you can check them out here on the [Mkdocs plugin wiki](https://github.co
 - can take package directories as input
 - reads type annotations
 - pulls function signatures
+
+## Limitations
+
+- currently only supports [google-style docstrings](http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings). May add support for others later if requested.
 
 ## Getting Started
 
