@@ -1,0 +1,8 @@
+.vscode
+tmp
+venv
+*.egg-info
+*.pyc
+*__pycache__*
+htmlcov
+.coverage
