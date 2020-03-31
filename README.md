@@ -1,13 +1,8 @@
-# Docstring Extractor
+# Markdown Refdocs
 
 ![Python package](https://github.com/creisle/markdown_refdocs/workflows/Python%20package/badge.svg?branch=master)
 
-Yet another docstring extraction pacakge. The motivation for this package was that writing docs in
-markdown is simpler to read and write than writing them in RST. There is an awesome package called
-[Mkdocs](https://www.mkdocs.org/) for turning your markdown documents into a static site. It has a
-number of plugins which extract docstrings from python files, however none of them
-are able to use the google docstring format which I prefer. If you're using a different docstring
-format you can check them out here on the [Mkdocs plugin wiki](https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins#api-documentation-building).
+Extracts docstings and type annotations from a python package to generate reference documentation in markdown
 
 ## Features
 
@@ -20,6 +15,15 @@ format you can check them out here on the [Mkdocs plugin wiki](https://github.co
 ## Limitations
 
 - currently only supports [google-style docstrings](http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings). May add support for others later if requested.
+
+## Motivation
+
+The motivation for this package was that writing docs in
+markdown is simpler to read and write than writing them in RST. There is an awesome package called
+[Mkdocs](https://www.mkdocs.org/) for turning your markdown documents into a static site. It has a
+number of plugins which extract docstrings from python files, however none of them
+are able to use the google docstring format which I prefer. If you're using a different docstring
+format you can check them out here on the [Mkdocs plugin wiki](https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins#api-documentation-building).
 
 ## Getting Started
 
