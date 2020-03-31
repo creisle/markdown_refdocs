@@ -15,7 +15,7 @@ jobs:
     - name: install and build
       run: |
         python3 -m pip install --upgrade pip setuptools
-        pip install .[docs]
+        pip3 install .[docs]
         markdown_refdocs markdown_refdocs -o docs/reference
         mkdocs build
 
