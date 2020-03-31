@@ -30,7 +30,7 @@ format you can check them out here on the [Mkdocs plugin wiki](https://github.co
 Install the package from pip
 
 ```bash
-pip install docstring_extractor
+pip install markdown_refdocs
 ```
 
 Run this from the command line or import the function to get the markdown returns as strings and
@@ -38,7 +38,7 @@ customize. This tool has the customary help manu you can view with the `-h` opti
 options documentation
 
 ```bash
-docstring_extractor -h
+markdown_refdocs -h
 ```
 
 
