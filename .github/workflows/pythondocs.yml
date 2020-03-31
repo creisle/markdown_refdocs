@@ -1,4 +1,4 @@
-name: Deploy the static file to GitHub Page
+name: Docs
 on: [push]
 jobs:
 
