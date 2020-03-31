@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build User Manual
 on: [push]
 jobs:
   build-and-deploy:
