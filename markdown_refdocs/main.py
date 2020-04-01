@@ -224,6 +224,10 @@ class ModuleAnalyzer(ast.NodeVisitor):
     def visit_NoneType(self, node: None) -> None:
         return node
 
+    def visit_Tuple(self, node: ast.Tuple) -> str:
+        content = ', '.join([self.visit(e) for e in node.elts])
+        return content
+
     def visit_Subscript(self, node: ast.Subscript) -> str:
         inner = self.visit(node.slice.value)
         return f'{self.visit(node.value)}[{inner}]'

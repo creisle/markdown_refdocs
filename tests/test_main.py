@@ -380,6 +380,55 @@ CONSTANT_THING = [
             md = parse_module_file('simple_module.py', '', hide_undoc=False)
             assert md.strip() == expected.strip()
 
+    def test_complex_types(self):
+        data = """
+from typing import List, Dict, Tuple
+
+def some_function() -> Tuple[List, Dict[str,int]]:
+    pass
+"""
+        expected = """# simple_module
+
+## some\\_function()
+
+```python
+def some_function() -> Tuple[List, Dict[str,int]]:
+```
+
+**Returns**
+
+- `Tuple[List, Dict[str, int]]`
+"""
+        with patch('builtins.open', mock_open(read_data=data)):
+
+            md = parse_module_file('simple_module.py', '', hide_undoc=False)
+            assert md.strip() == expected.strip()
+
+    def test_namespaced_types(self):
+        data = """
+from typing import List, Dict, Tuple
+import ast
+
+def some_function(arg1: ast.AST):
+    pass
+"""
+        expected = """# simple_module
+
+## some\\_function()
+
+```python
+def some_function(arg1: ast.AST):
+```
+
+**Args**
+
+- arg1 (`ast.AST`)
+"""
+        with patch('builtins.open', mock_open(read_data=data)):
+
+            md = parse_module_file('simple_module.py', '', hide_undoc=False)
+            assert md.strip() == expected.strip()
+
 
 class TestCommandInterface:
     def test_package_path(self, tmpdir):
