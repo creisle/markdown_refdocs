@@ -251,7 +251,11 @@ class ModuleAnalyzer(ast.NodeVisitor):
         return '\n'.join(md)
 
     def visit_Attribute(self, node: ast.Attribute) -> str:
-        return self.visit(node.value)
+        name = self.visit(node.value)
+
+        if node.attr:
+            return f'{name}.{node.attr}'
+        return name
 
 
 def parse_module_file(
