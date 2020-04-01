@@ -226,7 +226,7 @@ class ModuleAnalyzer(ast.NodeVisitor):
 
     def visit_Subscript(self, node: ast.Subscript) -> str:
         inner = self.visit(node.slice.value)
-        return f'{self.visit(node.value)}.<{inner}>'
+        return f'{self.visit(node.value)}[{inner}]'
 
     def visit_Assign(self, node: ast.Assign) -> str:
         expected_end_char = None

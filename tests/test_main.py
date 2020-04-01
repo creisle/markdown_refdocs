@@ -350,7 +350,7 @@ def some_function() -> List[Dict]:
 
 **Returns**
 
-- `List.<Dict>`
+- `List[Dict]`
 """
         with patch('builtins.open', mock_open(read_data=data)):
 
