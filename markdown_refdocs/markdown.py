@@ -7,6 +7,7 @@ def argument_md(
     description: str = '',
     default_value: str = None,
     hidden: bool = False,
+    **kwargs,
 ) -> str:
     md = ''
     if hidden:

@@ -111,16 +111,24 @@ class ModuleAnalyzer(ast.NodeVisitor):
             }
         )
         doc = parse_google_docstring(ast.get_docstring(node), self.hide_undoc_args)
-        if doc and doc.get('description', ''):
-            result['description'] = doc['description']
-
-        if doc and doc['attributes']:
-            result['attributes'] = doc['attributes']
+        result.update(
+            {d: doc[d] for d in doc if d not in ['parameters', 'raises', 'returns', 'attributes']}
+        )
 
         for elem in node.body:
             subnode = self.visit(elem)
-            if subnode:
+            if isinstance(elem, ast.FunctionDef) and subnode:
                 result['functions'].append(subnode)
+            if isinstance(elem, ast.AnnAssign):
+                exists = get_by_name(subnode['name'], doc['attributes']) or {}
+                exists.update(subnode)
+                result['attributes'].append(exists)
+
+        # add any attribute notes from the docstring not annotated
+        for attr in doc['attributes']:
+            exists = get_by_name(attr['name'], result['attributes'])
+            if not exists:
+                result['attributes'].append(attr)
         if self.hide_undoc and not result['functions'] and not result['attributes']:
             result['hidden'] = True
         return result
@@ -271,7 +279,6 @@ class ModuleAnalyzer(ast.NodeVisitor):
 
         result: List[ParsedVariable] = []
         for target in node.targets:
-            name = self.visit(target)
             result.append(
                 ParsedVariable(
                     {
@@ -283,6 +290,22 @@ class ModuleAnalyzer(ast.NodeVisitor):
                 )
             )
         return result
+
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> List[ParsedVariable]:
+        expected_end_char = None
+
+        if isinstance(node.value, ast.List):
+            expected_end_char = ']'
+        elif isinstance(node.value, ast.Call):
+            expected_end_char = ')'
+
+        return ParsedVariable(
+            {
+                'name': self.visit(node.target),
+                'source_code': left_align_block(self.get_source_segment(node, expected_end_char)),
+                'type': self.visit(node.annotation),
+            }
+        )
 
     def visit_Attribute(self, node: ast.Attribute) -> str:
         name = self.visit(node.value)

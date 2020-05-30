@@ -245,6 +245,8 @@ say something
                     'description': 'say something',
                     'hidden': False,
                     'functions': [],
+                    'examples': [],
+                    'note': '',
                     'attributes': [
                         {
                             'hidden': False,
@@ -258,6 +260,8 @@ say something
         }
         with patch('builtins.open', mock_open(read_data=data)):
             parsed = parse_module_file('simple_module.py', '')
+            print(parsed)
+            print(expected_parse)
             assert parsed == expected_parse
             md = module_to_markdown(parsed)
             assert md.strip() == expected_md.strip()
@@ -453,6 +457,112 @@ def some_function(arg1: ast.AST):
         with patch('builtins.open', mock_open(read_data=data)):
 
             md = module_to_markdown(parse_module_file('simple_module.py', '', hide_undoc=False))
+            assert md.strip() == expected.strip()
+
+    def test_typed_dict(self):
+        data = """
+from typings import TypedDict
+
+class SomeType(TypedDict):
+    name: str
+    parent: str
+    grandparent: str
+"""
+        expected = """# simple_module
+
+## class SomeType
+
+**Attributes**
+
+- name (`str`)
+- parent (`str`)
+- grandparent (`str`)
+"""
+        expect_parsed = {
+            'name': 'simple_module',
+            'hidden': False,
+            'variables': [],
+            'functions': [],
+            'description': '',
+            'classes': [
+                {
+                    'name': 'SomeType',
+                    'description': '',
+                    'hidden': False,
+                    'examples': [],
+                    'note': '',
+                    'attributes': [
+                        {'name': 'name', 'type': 'str', 'source_code': 'name: str',},
+                        {'name': 'parent', 'type': 'str', 'source_code': 'parent: str',},
+                        {'name': 'grandparent', 'type': 'str', 'source_code': 'grandparent: str',},
+                    ],
+                    'functions': [],
+                }
+            ],
+        }
+
+        with patch('builtins.open', mock_open(read_data=data)):
+            parsed = parse_module_file('simple_module.py', '', hide_undoc=False)
+            assert parsed == expect_parsed
+            md = module_to_markdown(parsed)
+            assert md.strip() == expected.strip()
+
+    def test_typed_dict_with_docstring(self):
+        data = """
+from typings import TypedDict
+
+class SomeType(TypedDict):
+    '''
+    Attributes:
+        parent: the name of the parent
+    '''
+    name: str
+    parent: str
+    grandparent: str
+"""
+        expected = """# simple_module
+
+## class SomeType
+
+**Attributes**
+
+- name (`str`)
+- parent (`str`): the name of the parent
+- grandparent (`str`)
+"""
+        expect_parsed = {
+            'name': 'simple_module',
+            'hidden': False,
+            'variables': [],
+            'functions': [],
+            'description': '',
+            'classes': [
+                {
+                    'name': 'SomeType',
+                    'description': '',
+                    'note': '',
+                    'examples': [],
+                    'hidden': False,
+                    'functions': [],
+                    'attributes': [
+                        {'name': 'name', 'type': 'str', 'source_code': 'name: str',},
+                        {
+                            'name': 'parent',
+                            'type': 'str',
+                            'source_code': 'parent: str',
+                            'description': 'the name of the parent',
+                            'hidden': False,
+                        },
+                        {'name': 'grandparent', 'type': 'str', 'source_code': 'grandparent: str',},
+                    ],
+                }
+            ],
+        }
+
+        with patch('builtins.open', mock_open(read_data=data)):
+            parsed = parse_module_file('simple_module.py', '', hide_undoc=False)
+            assert parsed == expect_parsed
+            md = module_to_markdown(parsed)
             assert md.strip() == expected.strip()
 
 
