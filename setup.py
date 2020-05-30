@@ -1,9 +1,7 @@
-from typing import List
-
 from setuptools import find_packages, setup
 
 # Dependencies required to use your package
-INSTALL_REQS: List[str] = []
+INSTALL_REQS = ['typing_extensions>=3.7.4.2']
 
 # Dependencies required only for running tests
 TEST_REQS = ['pytest', 'pytest-runner', 'pytest-cov']

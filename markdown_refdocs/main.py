@@ -1,10 +1,26 @@
 import argparse
 import ast
 import os
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-from .markdown import argument_md, function_md
+from .markdown import module_to_markdown
 from .parsers import left_align_block, parse_google_docstring
+from .types import (
+    ParsedClass,
+    ParsedDocstring,
+    ParsedFunction,
+    ParsedModule,
+    ParsedParameter,
+    ParsedReturn,
+    ParsedVariable,
+)
+
+
+def get_by_name(name: str, list_to_search: List[Dict]) -> Optional[Dict]:
+    for item in list_to_search:
+        if item['name'] == name:
+            return item
+    return None
 
 
 def get_lines_covered(node: ast.AST) -> Tuple[int, int]:
@@ -83,106 +99,130 @@ class ModuleAnalyzer(ast.NodeVisitor):
 
         return left_align_block(content)
 
-    def visit_ClassDef(self, node: ast.ClassDef) -> str:
+    def visit_ClassDef(self, node: ast.ClassDef) -> ParsedClass:
         """convert a class into markdown"""
-        md = [f'## class {self.get_qualified_name(node, node.name)}\n']
-        doc = parse_google_docstring(ast.get_docstring(node))
-        if doc['desc']:
-            md.append(doc['desc'] + '\n')
+        result = ParsedClass(
+            {
+                'name': self.get_qualified_name(node, node.name),
+                'description': '',
+                'attributes': [],
+                'functions': [],
+                'hidden': False,
+            }
+        )
+        doc = parse_google_docstring(ast.get_docstring(node), self.hide_undoc_args)
+        if doc and doc.get('description', ''):
+            result['description'] = doc['description']
 
-        if doc['attributes']:
-            md.append('**Attributes**\n')
-            for attr in doc['attributes']:
-                md.append(argument_md(**attr))
-            md.append('')
+        if doc and doc['attributes']:
+            result['attributes'] = doc['attributes']
 
         for elem in node.body:
             subnode = self.visit(elem)
             if subnode:
-                md.append(subnode)
-                md.append('')
-        if self.hide_undoc and len(md) == 1:
-            return ''
-        return '\n'.join(md)
+                result['functions'].append(subnode)
+        if self.hide_undoc and not result['functions'] and not result['attributes']:
+            result['hidden'] = True
+        return result
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> str:
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> ParsedFunction:
         """convert a function into markdown"""
-        decorators = [self.visit(d) for d in node.decorator_list]
-        args = []
+
+        decorators = {self.visit(d) for d in node.decorator_list}
+        result = ParsedFunction(
+            {
+                'name': self.get_qualified_name(node, node.name),
+                'hidden': False,
+                'is_class_method': 'classmethod' in decorators,
+                'is_static': 'staticmethod' in decorators,
+                'is_getter': 'property' in decorators,
+                'returns': ParsedReturn({}),
+                'parameters': [],
+                'raises': [],
+                'examples': [],
+                'description': '',
+                'source_definition': self.get_function_def_segment(node),
+                'source_code': self.get_source_segment(node),
+            }
+        )
 
         diff = len(node.args.args) - len(node.args.defaults)
         defaults = list(node.args.defaults)
         class_parent = isinstance(node.parent, ast.ClassDef)
+        result['is_method'] = (
+            class_parent
+            and not result['is_static']
+            and not result['is_getter']
+            and not result['is_class_method']
+        )
 
-        doc = parse_google_docstring(ast.get_docstring(node))
+        doc = parse_google_docstring(ast.get_docstring(node), self.hide_undoc_args)
+        result.update({d: doc[d] for d in doc if d != 'parameters'})
 
-        class_doc = {}
+        class_doc = ParsedDocstring({})
+
         if class_parent and node.name == '__init__':
-            class_doc = parse_google_docstring(ast.get_docstring(node.parent))
+            class_doc = parse_google_docstring(ast.get_docstring(node.parent), self.hide_undoc_args)
 
         if self.hide_private and node.name.startswith('_') and node.name != '__init__':
-            return ''
+            result['hidden'] = True
 
-        if not doc['desc'] and self.hide_undoc and not class_doc.get('desc', ''):
-            return ''
+        if (
+            not doc['description']
+            and self.hide_undoc
+            and (not class_doc or not class_doc['description'])
+        ):
+            result['hidden'] = True
 
         # mix the python built-in annotations with the docstring ones
-        returns = {}
-        if doc['returns']:
-            returns = doc['returns'][0]
+        result['returns'].update(doc['returns'])
         parsed_return = self.visit(node.returns)
         if parsed_return:
-            returns['type'] = parsed_return
+            result['returns']['type'] = parsed_return
 
         for index, arg in enumerate(node.args.args):
-            defn = {'name': arg.arg}
-            for doc_arg in class_doc.get('args', []) + doc['args']:
-                if doc_arg['name'] == arg.arg:
-                    defn.update(doc_arg)
+            arg_name = arg.arg
+            defn = ParsedParameter({'name': arg_name})
+
+            if index == 0:
+                if arg_name == 'self' and result['is_method']:
+                    continue
+                if arg_name == 'cls' and result['is_class_method']:
+                    continue
+            # update param from docstrings
+            function_arg_doc = get_by_name(arg_name, doc.get('parameters', []))
+            class_arg_doc = get_by_name(arg_name, class_doc.get('parameters', []))
+            if class_arg_doc:
+                defn.update(class_arg_doc)
+            if function_arg_doc:
+                defn.update(function_arg_doc)
+
             if index >= diff:
-                defn['default'] = self.visit(defaults[index - diff])
+                defn['default_value'] = self.visit(defaults[index - diff])
             if arg.annotation:
                 defn['type'] = self.visit(arg.annotation)
 
-            args.append(defn)
+            result['parameters'].append(defn)
 
-        if (
-            args
-            and class_parent
-            and 'property' not in decorators
-            and 'staticmethod' not in decorators
-        ):
-            args = args[1:]
+        return result
 
-        args = [
-            a for a in args if not self.hide_undoc_args or len([k for k in defn if defn[k]]) > 1
-        ]
-        heading_level = 3 if class_parent else 2
-        name = self.get_qualified_name(node, node.name)
-
-        if name and 'property' not in decorators:
-            name += '()'
-
-        return function_md(
-            name,
-            args,
-            returns=returns,
-            raises=doc['raises'],
-            source_defn=self.get_function_def_segment(node),
-            source=self.get_source_segment(node),
-            note=doc['note'],
-            desc=doc['desc'],
-            heading_level=heading_level,
-            examples=doc['example'],
-        )
-
-    def visit_Module(self, node: ast.Module) -> str:
+    def visit_Module(self, node: ast.Module) -> ParsedModule:
         """
         Convert a module into markdown
         """
-        classes = []
-        functions = []
-        constants = []
+        classes: List[ParsedClass] = []
+        functions: List[ParsedFunction] = []
+        constants: List[ParsedVariable] = []
+        result = ParsedModule(
+            {
+                'name': self.name,
+                'variables': constants,
+                'functions': functions,
+                'classes': classes,
+                'hidden': False,
+                'description': ast.get_docstring(node) or '',
+            }
+        )
         node.name = self.name
 
         # register parents
@@ -199,24 +239,13 @@ class ModuleAnalyzer(ast.NodeVisitor):
             elif isinstance(elem, ast.FunctionDef):
                 functions.append(subnode)
             elif isinstance(elem, ast.Assign):
-                constants.append(subnode)
+                constants.extend(subnode)
 
-        md = [f'# {self.name}\n']
         module_docstring = ast.get_docstring(node)
-
-        if module_docstring:
-            md.append(module_docstring)
-            md.append('')
-
-        for section in [constants, classes, functions]:
-            if section:
-                md.extend(section)
-                md.append('')
-
         if not classes and not functions and not module_docstring and self.hide_undoc:
-            return ''
+            result['hidden'] = True
 
-        return '\n'.join(md)
+        return result
 
     def visit_Name(self, node: ast.Name) -> str:
         return node.id
@@ -232,7 +261,7 @@ class ModuleAnalyzer(ast.NodeVisitor):
         inner = self.visit(node.slice.value)
         return f'{self.visit(node.value)}[{inner}]'
 
-    def visit_Assign(self, node: ast.Assign) -> str:
+    def visit_Assign(self, node: ast.Assign) -> List[ParsedVariable]:
         expected_end_char = None
 
         if isinstance(node.value, ast.List):
@@ -240,15 +269,20 @@ class ModuleAnalyzer(ast.NodeVisitor):
         elif isinstance(node.value, ast.Call):
             expected_end_char = ')'
 
-        md = []
+        result: List[ParsedVariable] = []
         for target in node.targets:
             name = self.visit(target)
-            source = left_align_block(self.get_source_segment(node, expected_end_char))
-
-            md.extend(
-                [f'## {self.get_qualified_name(node, name)}\n', f'```python\n{source}\n```\n']
+            result.append(
+                ParsedVariable(
+                    {
+                        'name': self.visit(target),
+                        'source_code': left_align_block(
+                            self.get_source_segment(node, expected_end_char)
+                        ),
+                    }
+                )
             )
-        return '\n'.join(md)
+        return result
 
     def visit_Attribute(self, node: ast.Attribute) -> str:
         name = self.visit(node.value)
@@ -265,7 +299,7 @@ def parse_module_file(
     hide_undoc: bool = True,
     hide_undoc_args: bool = True,
     namespace_headers: bool = False,
-) -> str:
+) -> ParsedModule:
     """
     convert a module into markdown
 
@@ -332,10 +366,10 @@ def extract_to_markdown(
 
             print('writing:', module_file_output)
             with open(module_file_output, 'w') as fh:
-                fh.write(md)
+                fh.write(module_to_markdown(md))
 
 
-def command_interface():
+def command_interface() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--show_private',
