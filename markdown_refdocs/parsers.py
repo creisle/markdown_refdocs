@@ -1,5 +1,5 @@
 import re
-from typing import Dict
+from typing import Any, Dict
 
 
 def left_align_block(block):
@@ -8,7 +8,7 @@ def left_align_block(block):
         return block
 
     indent = re.match(r'(\s*).*', lines[0]).group(1)
-    content = '\n'.join([l[len(indent) :] for l in lines])
+    content = '\n'.join([line[len(indent) :] for line in lines])
     return content
 
 
@@ -18,7 +18,7 @@ def parse_google_docstring(docstring: str) -> Dict:
     """
     state = None
     tags = ['args', 'returns', 'raises', 'note', 'desc', 'example', 'attributes']
-    content = {k: [] for k in tags}
+    content: Dict[str, Any] = {tag: [] for tag in tags}
 
     if not docstring:
         return content

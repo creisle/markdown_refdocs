@@ -1,7 +1,9 @@
-from setuptools import setup, find_packages
+from typing import List
+
+from setuptools import find_packages, setup
 
 # Dependencies required to use your package
-INSTALL_REQS = []
+INSTALL_REQS: List[str] = []
 
 # Dependencies required only for running tests
 TEST_REQS = ['pytest', 'pytest-runner', 'pytest-cov']
@@ -11,7 +13,9 @@ DEPLOYMENT_REQS = ['twine', 'wheel']
 
 DOC_REQS = ['mkdocs', 'mkdocs-material']
 
-DEV_REQS = TEST_REQS + DEPLOYMENT_REQS + DOC_REQS + ['black', 'flake8', 'flake8-annotations']
+DEV_REQS = (
+    TEST_REQS + DEPLOYMENT_REQS + DOC_REQS + ['black', 'flake8', 'flake8-annotations', 'mypy']
+)
 
 long_description = ''
 

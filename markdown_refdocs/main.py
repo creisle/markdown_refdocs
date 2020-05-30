@@ -1,10 +1,10 @@
-import ast
-from typing import List, Tuple
-import os
 import argparse
+import ast
+import os
+from typing import List, Optional, Tuple
 
-from .parsers import parse_google_docstring, left_align_block
-from .markdown import function_md, argument_md
+from .markdown import argument_md, function_md
+from .parsers import left_align_block, parse_google_docstring
 
 
 def get_lines_covered(node: ast.AST) -> Tuple[int, int]:
@@ -40,7 +40,7 @@ class ModuleAnalyzer(ast.NodeVisitor):
             self.content = source.read()
             self.lines = self.content.split('\n')
 
-    def get_qualified_name(self, node: ast.AST, name: str) -> str:
+    def get_qualified_name(self, node: ast.AST, name: str) -> Optional[str]:
         parents = []
         if not node.parent:
             return None
@@ -65,7 +65,7 @@ class ModuleAnalyzer(ast.NodeVisitor):
             content = '\n'.join(self.lines[start - 1 : end])
         return content
 
-    def get_function_def_segment(self, node: ast.AST) -> str:
+    def get_function_def_segment(self, node: ast.FunctionDef) -> str:
         """
         Get the source code lines covering the function defintion
         """
@@ -160,7 +160,7 @@ class ModuleAnalyzer(ast.NodeVisitor):
         heading_level = 3 if class_parent else 2
         name = self.get_qualified_name(node, node.name)
 
-        if 'property' not in decorators:
+        if name and 'property' not in decorators:
             name += '()'
 
         return function_md(

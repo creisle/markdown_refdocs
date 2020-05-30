@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Dict, List
 
 
 def argument_md(name: str = '', type: str = None, desc: str = '', default: str = None) -> str:
@@ -55,7 +55,7 @@ def function_md(
         md.append('')
 
     if examples:
-        md.append(f'**Examples**\n')
+        md.append('**Examples**\n')
         for example in examples:
             md.append(f'```python\n{example}\n```\n')
         md.append('')
