@@ -39,6 +39,7 @@ setup(
         'test': TEST_REQS,
         'docs': DOC_REQS,
     },
+    package_data={'markdown_refdocs': ['py.typed']},
     python_requires='>=3.6',
     author_email='caralynreisle@gmail.com',
     author='Caralyn Reisle',
