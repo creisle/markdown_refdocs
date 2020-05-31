@@ -1,8 +1,10 @@
-import sys
 import os
-from unittest.mock import patch, mock_open
+import sys
+from unittest.mock import mock_open, patch
 
-from markdown_refdocs.main import parse_module_file, command_interface
+from markdown_refdocs.main import command_interface, parse_module_file
+from markdown_refdocs.markdown import module_to_markdown
+from markdown_refdocs.types import ParsedModule, ParsedVariable
 
 
 class TestParseModuleFile:
@@ -30,7 +32,7 @@ def simple_function(arg1: str, arg2: int):
 - arg2 (`int`)
 """
         with patch('builtins.open', mock_open(read_data=data)):
-            md = parse_module_file('simple_module.py', '')
+            md = module_to_markdown(parse_module_file('simple_module.py', ''))
             assert md.strip() == expected.strip()
 
     def test_overwrite_docstring_with_annotations(self):
@@ -60,7 +62,7 @@ def simple_function(arg1: str, arg2: int):
 - arg2 (`int`)
 """
         with patch('builtins.open', mock_open(read_data=data)):
-            md = parse_module_file('simple_module.py', '')
+            md = module_to_markdown(parse_module_file('simple_module.py', ''))
             assert md.strip() == expected.strip()
 
     def test_examples_from_docstring(self):
@@ -101,7 +103,7 @@ def simple_function(arg1: str, arg2: int):
 ```
 """
         with patch('builtins.open', mock_open(read_data=data)):
-            md = parse_module_file('simple_module.py', '')
+            md = module_to_markdown(parse_module_file('simple_module.py', ''))
             assert md.strip() == expected.strip()
 
     def test_returns_from_type_annotation(self):
@@ -135,7 +137,7 @@ def simple_function(arg1: str, arg2: int) -> str:
 - `str`
 """
         with patch('builtins.open', mock_open(read_data=data)):
-            md = parse_module_file('simple_module.py', '')
+            md = module_to_markdown(parse_module_file('simple_module.py', ''))
             assert md.strip() == expected.strip()
 
     def test_parses_raise(self):
@@ -172,7 +174,7 @@ def simple_function(arg1: str, arg2: int):
 - `NotImplementedError`: stuff
 """
         with patch('builtins.open', mock_open(read_data=data)):
-            md = parse_module_file('simple_module.py', '')
+            md = module_to_markdown(parse_module_file('simple_module.py', ''))
             assert md.strip() == expected.strip()
 
     def test_multiline_function_def(self):
@@ -208,7 +210,7 @@ def simple_function(
 - arg2 (`int`)
 """
         with patch('builtins.open', mock_open(read_data=data)):
-            md = parse_module_file('simple_module.py', '')
+            md = module_to_markdown(parse_module_file('simple_module.py', ''))
             assert md.strip() == expected.strip()
 
     def test_class_desc(self):
@@ -222,7 +224,7 @@ class SomeClass:
     '''
     pass
 """
-        expected = """# simple_module
+        expected_md = """# simple_module
 
 ## class SomeClass
 
@@ -232,9 +234,37 @@ say something
 
 - attr1 (`int`): an thing on a class instance
 """
+        expected_parse = {
+            'name': 'simple_module',
+            'hidden': False,
+            'functions': [],
+            'description': '',
+            'variables': [],
+            'classes': [
+                {
+                    'name': 'SomeClass',
+                    'description': 'say something',
+                    'inherits': [],
+                    'hidden': False,
+                    'functions': [],
+                    'examples': [],
+                    'note': '',
+                    'attributes': [
+                        {
+                            'hidden': False,
+                            'name': 'attr1',
+                            'type': 'int',
+                            'description': 'an thing on a class instance',
+                        }
+                    ],
+                }
+            ],
+        }
         with patch('builtins.open', mock_open(read_data=data)):
-            md = parse_module_file('simple_module.py', '')
-            assert md.strip() == expected.strip()
+            parsed = parse_module_file('simple_module.py', '')
+            assert parsed == expected_parse
+            md = module_to_markdown(parsed)
+            assert md.strip() == expected_md.strip()
 
     def test_class_methods(self):
         data = """
@@ -258,7 +288,7 @@ def some_method_on_a_class(self):
 ```
 """
         with patch('builtins.open', mock_open(read_data=data)):
-            md = parse_module_file('simple_module.py', '')
+            md = module_to_markdown(parse_module_file('simple_module.py', ''))
             assert md.strip() == expected.strip()
 
     def test_pass_class_args_to_construcor(self):
@@ -292,7 +322,7 @@ def __init__(self, arg1):
 """
         with patch('builtins.open', mock_open(read_data=data)):
 
-            md = parse_module_file('simple_module.py', '')
+            md = module_to_markdown(parse_module_file('simple_module.py', ''))
             assert md.strip() == expected.strip()
 
     def test_module_constant(self):
@@ -309,7 +339,7 @@ CONSTANT_THING = 'some constant thing'
 """
         with patch('builtins.open', mock_open(read_data=data)):
 
-            md = parse_module_file('simple_module.py', '', hide_undoc=False)
+            md = module_to_markdown(parse_module_file('simple_module.py', '', hide_undoc=False))
             assert md.strip() == expected.strip()
 
     def test_module_constant_pulled_when_any_docstring(self):
@@ -332,7 +362,7 @@ CONSTANT_THING = 'some constant thing'
 """
         with patch('builtins.open', mock_open(read_data=data)):
 
-            md = parse_module_file('simple_module.py', '')
+            md = module_to_markdown(parse_module_file('simple_module.py', ''))
             assert md.strip() == expected.strip()
 
     def test_nested_return_type_annotation(self):
@@ -354,7 +384,7 @@ def some_function() -> List[Dict]:
 """
         with patch('builtins.open', mock_open(read_data=data)):
 
-            md = parse_module_file('simple_module.py', '', hide_undoc=False)
+            md = module_to_markdown(parse_module_file('simple_module.py', '', hide_undoc=False))
             assert md.strip() == expected.strip()
 
     def test_multiline_module_constant(self):
@@ -377,7 +407,7 @@ CONSTANT_THING = [
 """
         with patch('builtins.open', mock_open(read_data=data)):
 
-            md = parse_module_file('simple_module.py', '', hide_undoc=False)
+            md = module_to_markdown(parse_module_file('simple_module.py', '', hide_undoc=False))
             assert md.strip() == expected.strip()
 
     def test_complex_types(self):
@@ -401,7 +431,7 @@ def some_function() -> Tuple[List, Dict[str,int]]:
 """
         with patch('builtins.open', mock_open(read_data=data)):
 
-            md = parse_module_file('simple_module.py', '', hide_undoc=False)
+            md = module_to_markdown(parse_module_file('simple_module.py', '', hide_undoc=False))
             assert md.strip() == expected.strip()
 
     def test_namespaced_types(self):
@@ -426,8 +456,146 @@ def some_function(arg1: ast.AST):
 """
         with patch('builtins.open', mock_open(read_data=data)):
 
-            md = parse_module_file('simple_module.py', '', hide_undoc=False)
+            md = module_to_markdown(parse_module_file('simple_module.py', '', hide_undoc=False))
             assert md.strip() == expected.strip()
+
+    def test_typed_dict(self):
+        data = """
+from typings import TypedDict
+
+class SomeType(TypedDict):
+    name: str
+    parent: str
+    grandparent: str
+"""
+        expected = """# simple_module
+
+## class SomeType
+
+**inherits** `TypedDict`
+
+**Attributes**
+
+- name (`str`)
+- parent (`str`)
+- grandparent (`str`)
+"""
+        expect_parsed = {
+            'name': 'simple_module',
+            'hidden': False,
+            'variables': [],
+            'functions': [],
+            'description': '',
+            'classes': [
+                {
+                    'name': 'SomeType',
+                    'inherits': ['TypedDict'],
+                    'description': '',
+                    'hidden': False,
+                    'examples': [],
+                    'note': '',
+                    'attributes': [
+                        {'name': 'name', 'type': 'str', 'source_code': 'name: str',},
+                        {'name': 'parent', 'type': 'str', 'source_code': 'parent: str',},
+                        {'name': 'grandparent', 'type': 'str', 'source_code': 'grandparent: str',},
+                    ],
+                    'functions': [],
+                }
+            ],
+        }
+
+        with patch('builtins.open', mock_open(read_data=data)):
+            parsed = parse_module_file('simple_module.py', '', hide_undoc=False)
+            assert parsed == expect_parsed
+            md = module_to_markdown(parsed)
+            assert md.strip() == expected.strip()
+
+    def test_typed_dict_with_docstring(self):
+        data = """
+from typings import TypedDict
+
+class SomeType(TypedDict):
+    '''
+    Attributes:
+        parent: the name of the parent
+    '''
+    name: str
+    parent: str
+    grandparent: str
+"""
+        expected = """# simple_module
+
+## class SomeType
+
+**inherits** `TypedDict`
+
+**Attributes**
+
+- name (`str`)
+- parent (`str`): the name of the parent
+- grandparent (`str`)
+"""
+        expect_parsed = {
+            'name': 'simple_module',
+            'hidden': False,
+            'variables': [],
+            'functions': [],
+            'description': '',
+            'classes': [
+                {
+                    'name': 'SomeType',
+                    'description': '',
+                    'inherits': ['TypedDict'],
+                    'note': '',
+                    'examples': [],
+                    'hidden': False,
+                    'functions': [],
+                    'attributes': [
+                        {'name': 'name', 'type': 'str', 'source_code': 'name: str'},
+                        {
+                            'name': 'parent',
+                            'type': 'str',
+                            'source_code': 'parent: str',
+                            'description': 'the name of the parent',
+                            'hidden': False,
+                        },
+                        {'name': 'grandparent', 'type': 'str', 'source_code': 'grandparent: str'},
+                    ],
+                }
+            ],
+        }
+
+        with patch('builtins.open', mock_open(read_data=data)):
+            parsed = parse_module_file('simple_module.py', '', hide_undoc=False)
+            assert parsed == expect_parsed
+            md = module_to_markdown(parsed)
+            assert md.strip() == expected.strip()
+
+    def test_alternate_typeddict_notation(self):
+        data = """try:
+    from typing import TypedDict  # type: ignore
+except ImportError:
+    from typing_extensions import TypedDict
+
+Parsed: TypedDict = TypedDict('Parsed', {'name': str, 'source_code': str, 'hidden': bool})"""
+        expect_parsed = [
+            ParsedVariable(
+                {
+                    'type': 'TypedDict',
+                    'name': 'Parsed',
+                    'source_code': """Parsed: TypedDict = TypedDict('Parsed', {'name': str, 'source_code': str, 'hidden': bool})""",
+                    'attributes': [
+                        {'name': 'name', 'type': 'str'},
+                        {'name': 'source_code', 'type': 'str'},
+                        {'name': 'hidden', 'type': 'bool'},
+                    ],
+                }
+            )
+        ]
+
+        with patch('builtins.open', mock_open(read_data=data)):
+            parsed = parse_module_file('simple_module.py', '', hide_undoc=False)
+            assert parsed['variables'] == expect_parsed
 
 
 class TestCommandInterface:

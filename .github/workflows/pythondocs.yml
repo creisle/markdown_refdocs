@@ -1,7 +1,7 @@
 name: Docs
 on:
   push:
-    branches: 
+    branches:
       - master
 jobs:
 
@@ -22,7 +22,7 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip setuptools
         pip3 install .[docs]
-        markdown_refdocs markdown_refdocs -o docs/reference
+        markdown_refdocs markdown_refdocs -o docs/reference --links
         mkdocs build
 
     - name: Deploy
