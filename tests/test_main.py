@@ -4,6 +4,7 @@ from unittest.mock import mock_open, patch
 
 from markdown_refdocs.main import command_interface, parse_module_file
 from markdown_refdocs.markdown import module_to_markdown
+from markdown_refdocs.types import ParsedModule, ParsedVariable
 
 
 class TestParseModuleFile:
@@ -243,6 +244,7 @@ say something
                 {
                     'name': 'SomeClass',
                     'description': 'say something',
+                    'inherits': [],
                     'hidden': False,
                     'functions': [],
                     'examples': [],
@@ -260,8 +262,6 @@ say something
         }
         with patch('builtins.open', mock_open(read_data=data)):
             parsed = parse_module_file('simple_module.py', '')
-            print(parsed)
-            print(expected_parse)
             assert parsed == expected_parse
             md = module_to_markdown(parsed)
             assert md.strip() == expected_md.strip()
@@ -472,6 +472,8 @@ class SomeType(TypedDict):
 
 ## class SomeType
 
+**inherits** `TypedDict`
+
 **Attributes**
 
 - name (`str`)
@@ -487,6 +489,7 @@ class SomeType(TypedDict):
             'classes': [
                 {
                     'name': 'SomeType',
+                    'inherits': ['TypedDict'],
                     'description': '',
                     'hidden': False,
                     'examples': [],
@@ -524,6 +527,8 @@ class SomeType(TypedDict):
 
 ## class SomeType
 
+**inherits** `TypedDict`
+
 **Attributes**
 
 - name (`str`)
@@ -540,12 +545,13 @@ class SomeType(TypedDict):
                 {
                     'name': 'SomeType',
                     'description': '',
+                    'inherits': ['TypedDict'],
                     'note': '',
                     'examples': [],
                     'hidden': False,
                     'functions': [],
                     'attributes': [
-                        {'name': 'name', 'type': 'str', 'source_code': 'name: str',},
+                        {'name': 'name', 'type': 'str', 'source_code': 'name: str'},
                         {
                             'name': 'parent',
                             'type': 'str',
@@ -553,7 +559,7 @@ class SomeType(TypedDict):
                             'description': 'the name of the parent',
                             'hidden': False,
                         },
-                        {'name': 'grandparent', 'type': 'str', 'source_code': 'grandparent: str',},
+                        {'name': 'grandparent', 'type': 'str', 'source_code': 'grandparent: str'},
                     ],
                 }
             ],
@@ -564,6 +570,32 @@ class SomeType(TypedDict):
             assert parsed == expect_parsed
             md = module_to_markdown(parsed)
             assert md.strip() == expected.strip()
+
+    def test_alternate_typeddict_notation(self):
+        data = """try:
+    from typing import TypedDict  # type: ignore
+except ImportError:
+    from typing_extensions import TypedDict
+
+Parsed: TypedDict = TypedDict('Parsed', {'name': str, 'source_code': str, 'hidden': bool})"""
+        expect_parsed = [
+            ParsedVariable(
+                {
+                    'type': 'TypedDict',
+                    'name': 'Parsed',
+                    'source_code': """Parsed: TypedDict = TypedDict('Parsed', {'name': str, 'source_code': str, 'hidden': bool})""",
+                    'attributes': [
+                        {'name': 'name', 'type': 'str'},
+                        {'name': 'source_code', 'type': 'str'},
+                        {'name': 'hidden', 'type': 'bool'},
+                    ],
+                }
+            )
+        ]
+
+        with patch('builtins.open', mock_open(read_data=data)):
+            parsed = parse_module_file('simple_module.py', '', hide_undoc=False)
+            assert parsed['variables'] == expect_parsed
 
 
 class TestCommandInterface:

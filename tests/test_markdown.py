@@ -1,4 +1,4 @@
-from markdown_refdocs.markdown import constant_to_markdown, function_to_markdown
+from markdown_refdocs.markdown import constant_to_markdown, create_type_link, function_to_markdown
 
 
 class TestConstantToMarkdown:
@@ -40,3 +40,17 @@ class TestFunctionToMarkdown:
 some desc
 '''
         )
+
+
+class TestCreateTypeLink:
+    def test_simple_link(self):
+        link = './path/to/other/#class-someclass'
+        types = {'type': link}
+        md = create_type_link('type', types)
+        assert md == f'[type]({link})'
+
+    def test_link_inside_list(self):
+        link = './path/to/other/#class-someclass'
+        types = {'type': link}
+        md = create_type_link('List[type]', types)
+        assert md == f'List\\[[type]({link})\\]'

@@ -5,11 +5,7 @@ try:
 except ImportError:
     from typing_extensions import TypedDict
 
-
-class Parsed(TypedDict):
-    name: str
-    source_code: str
-    hidden: bool
+Parsed: TypedDict = TypedDict('Parsed', {'name': str, 'source_code': str, 'hidden': bool})
 
 
 class ParsedParameter(Parsed):
@@ -24,6 +20,10 @@ class ParsedReturn(TypedDict):
 
 
 class ParsedFunction(Parsed):
+    """
+    Result of the combination of parsing the source code and combining with the docstring of a function
+    """
+
     parameters: List[ParsedParameter]
     returns: ParsedReturn
     note: str
@@ -56,6 +56,7 @@ class ParsedClass(Parsed):
     functions: List[ParsedFunction]
     variables: List[ParsedVariable]
     description: str
+    inherits: List[str]
 
 
 class ParsedModule(Parsed):

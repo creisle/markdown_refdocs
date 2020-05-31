@@ -1,8 +1,9 @@
 import argparse
 import ast
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union, cast
 
+from .links import create_relative_types_mapping, create_types_mapping
 from .markdown import module_to_markdown
 from .parsers import left_align_block, parse_google_docstring
 from .types import (
@@ -34,6 +35,10 @@ def get_lines_covered(node: ast.AST) -> Tuple[int, int]:
 
 
 class ModuleAnalyzer(ast.NodeVisitor):
+    """
+    Parse a python module into reference docs using the source code and docstrings
+    """
+
     def __init__(
         self,
         filename: str,
@@ -107,6 +112,7 @@ class ModuleAnalyzer(ast.NodeVisitor):
                 'description': '',
                 'attributes': [],
                 'functions': [],
+                'inherits': [self.visit(b) for b in node.bases],
                 'hidden': False,
             }
         )
@@ -126,8 +132,8 @@ class ModuleAnalyzer(ast.NodeVisitor):
 
         # add any attribute notes from the docstring not annotated
         for attr in doc['attributes']:
-            exists = get_by_name(attr['name'], result['attributes'])
-            if not exists:
+            not_exists = not get_by_name(attr['name'], result['attributes'])
+            if not_exists:
                 result['attributes'].append(attr)
         if self.hide_undoc and not result['functions'] and not result['attributes']:
             result['hidden'] = True
@@ -243,11 +249,13 @@ class ModuleAnalyzer(ast.NodeVisitor):
             if not subnode:
                 continue
             if isinstance(elem, ast.ClassDef):
-                classes.append(subnode)
+                classes.append(cast(ParsedClass, subnode))
             elif isinstance(elem, ast.FunctionDef):
-                functions.append(subnode)
+                functions.append(cast(ParsedFunction, subnode))
             elif isinstance(elem, ast.Assign):
-                constants.extend(subnode)
+                constants.extend(cast(ParsedVariable, subnode))
+            elif isinstance(elem, ast.AnnAssign):
+                constants.append(cast(ParsedVariable, subnode))
 
         module_docstring = ast.get_docstring(node)
         if not classes and not functions and not module_docstring and self.hide_undoc:
@@ -257,6 +265,9 @@ class ModuleAnalyzer(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> str:
         return node.id
+
+    def visit_Str(self, node: ast.Str) -> str:
+        return node.s
 
     def visit_NoneType(self, node: None) -> None:
         return node
@@ -291,13 +302,25 @@ class ModuleAnalyzer(ast.NodeVisitor):
             )
         return result
 
-    def visit_AnnAssign(self, node: ast.AnnAssign) -> List[ParsedVariable]:
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> List[Union[ParsedVariable, ParsedClass]]:
         expected_end_char = None
 
         if isinstance(node.value, ast.List):
             expected_end_char = ']'
         elif isinstance(node.value, ast.Call):
             expected_end_char = ')'
+
+        if self.visit(node.annotation) == 'TypedDict':
+            return ParsedClass(
+                {
+                    'name': self.visit(node.target),
+                    'source_code': left_align_block(
+                        self.get_source_segment(node, expected_end_char)
+                    ),
+                    'attributes': self.visit(node.value),
+                    'type': 'TypedDict',
+                }
+            )
 
         return ParsedVariable(
             {
@@ -313,6 +336,15 @@ class ModuleAnalyzer(ast.NodeVisitor):
         if node.attr:
             return f'{name}.{node.attr}'
         return name
+
+    def visit_Call(self, node: ast.Call) -> List[ParsedVariable]:
+        name = self.visit(node.func)
+        if name == 'TypedDict':
+            attributes = node.args[1]
+            keys = [self.visit(k) for k in attributes.keys]
+            values = [self.visit(v) for v in attributes.values]
+            return [ParsedVariable({'name': k, 'type': v}) for (k, v) in zip(keys, values)]
+        return []
 
 
 def parse_module_file(
@@ -357,10 +389,13 @@ def extract_to_markdown(
     hide_undoc: bool = True,
     hide_undoc_args: bool = True,
     namespace_headers: bool = False,
-):
+    link: bool = False,
+) -> None:
+
     for path in paths:
         if path.endswith('/'):
             path = path[:-1]
+
         package = os.path.basename(path)
         prefix = path[0 : len(path) - len(package)]
         files = []
@@ -370,8 +405,11 @@ def extract_to_markdown(
             for root, dirs, walkfiles in os.walk(path):
                 files.extend([os.path.join(root, w) for w in walkfiles if w.endswith('.py')])
 
+        modules: Dict[str, ParsedModule] = {}
+        type_mapping: Dict[str, str] = {}
+
         for filename in files:
-            md = parse_module_file(
+            parsed = parse_module_file(
                 filename,
                 prefix,
                 hide_private=hide_private,
@@ -379,17 +417,24 @@ def extract_to_markdown(
                 hide_undoc_args=hide_undoc_args,
                 namespace_headers=namespace_headers,
             )
-            if not md:
+            module_filename = filename[len(prefix) :].replace('.py', '.md')
+
+            modules[module_filename] = parsed
+
+        if link:
+            type_mapping = create_types_mapping(modules)
+
+        for module_filename, parsed in modules.items():
+            if parsed.get('hidden', False):
                 continue
-            module_file_output = os.path.join(
-                output_dir, filename[len(prefix) :].replace('.py', '.md')
-            )
+            module_file_output = os.path.join(output_dir, module_filename)
             dirname = os.path.dirname(module_file_output)
             os.makedirs(dirname, exist_ok=True)
 
             print('writing:', module_file_output)
             with open(module_file_output, 'w') as fh:
-                fh.write(module_to_markdown(md))
+                relative_mapping = create_relative_types_mapping(module_filename, type_mapping)
+                fh.write(module_to_markdown(parsed, relative_mapping))
 
 
 def command_interface() -> None:
@@ -422,10 +467,17 @@ def command_interface() -> None:
         action='store_true',
         help='If true then the package/module prefix will be prepended to function/class names. Ex. pacakge_name.module_name.function_name instead of just function_name',
     )
+    parser.add_argument(
+        '--link',
+        default=False,
+        action='store_true',
+        help='Base URL to use for creating internal links',
+    )
     args = parser.parse_args()
     extract_to_markdown(
         args.inputs,
         args.output_dir,
+        link=args.link,
         hide_private=not args.show_private,
         hide_undoc=not args.show_undoc,
         hide_undoc_args=not args.show_undoc_args,
