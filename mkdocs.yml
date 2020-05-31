@@ -5,6 +5,8 @@ nav:
       - markdown_refdocs.main: reference/markdown_refdocs/main.md
       - markdown_refdocs.parsers: reference/markdown_refdocs/parsers.md
       - markdown_refdocs.markdown: reference/markdown_refdocs/markdown.md
+      - markdown_refdocs.types: reference/markdown_refdocs/types.md
+      - markdown_refdocs.links: reference/markdown_refdocs/links.md
 markdown_extensions:
   - codehilite
 theme:

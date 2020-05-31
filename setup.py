@@ -1,7 +1,7 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 # Dependencies required to use your package
-INSTALL_REQS = []
+INSTALL_REQS = ['typing_extensions>=3.7.4.2']
 
 # Dependencies required only for running tests
 TEST_REQS = ['pytest', 'pytest-runner', 'pytest-cov']
@@ -11,7 +11,9 @@ DEPLOYMENT_REQS = ['twine', 'wheel']
 
 DOC_REQS = ['mkdocs', 'mkdocs-material']
 
-DEV_REQS = TEST_REQS + DEPLOYMENT_REQS + DOC_REQS + ['black', 'flake8', 'flake8-annotations']
+DEV_REQS = (
+    TEST_REQS + DEPLOYMENT_REQS + DOC_REQS + ['black', 'flake8', 'flake8-annotations', 'mypy']
+)
 
 long_description = ''
 
@@ -37,6 +39,7 @@ setup(
         'test': TEST_REQS,
         'docs': DOC_REQS,
     },
+    package_data={'markdown_refdocs': ['py.typed']},
     python_requires='>=3.6',
     author_email='caralynreisle@gmail.com',
     author='Caralyn Reisle',

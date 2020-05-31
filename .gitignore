@@ -10,3 +10,4 @@ build-docs
 docs/reference
 build
 dist
+.mypy_cache
