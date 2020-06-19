@@ -495,6 +495,27 @@ def some_function(arg1: ast.AST):
             md = module_to_markdown(parse_module_file('simple_module.py', '', hide_undoc=False))
             assert md.strip() == expected.strip()
 
+    def test_callable(self):
+        data = """
+class ResourceFieldDef(_ResourceFieldDefReq, total=False):
+    update: Callable[[Any, Union[int, str]], None]
+    deprecated: bool
+"""
+        expected = """# simple_module
+
+## class ResourceFieldDef
+
+**inherits** `_ResourceFieldDefReq`
+
+**Attributes**
+
+- update (`Callable[[Any, Union[int, str]], None]`)
+- deprecated (`bool`)
+"""
+        with patch('builtins.open', mock_open(read_data=data)):
+            md = module_to_markdown(parse_module_file('simple_module.py', '', hide_undoc=False))
+            assert md.strip() == expected.strip()
+
     def test_typed_dict(self):
         data = """
 from typings import TypedDict

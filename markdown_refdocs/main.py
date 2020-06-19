@@ -283,6 +283,9 @@ class ModuleAnalyzer(ast.NodeVisitor):
     def visit_Name(self, node: ast.Name) -> str:
         return node.id
 
+    def visit_NameConstant(self, node: ast.NameConstant) -> str:
+        return node.value
+
     def visit_Str(self, node: ast.Str) -> str:
         return node.s
 
@@ -290,8 +293,12 @@ class ModuleAnalyzer(ast.NodeVisitor):
         return node
 
     def visit_Tuple(self, node: ast.Tuple) -> str:
-        content = ', '.join([self.visit(e) for e in node.elts])
+        content = ', '.join([str(self.visit(e)) for e in node.elts])
         return content
+
+    def visit_List(self, node: ast.List) -> str:
+        content = ', '.join([str(self.visit(e)) for e in node.elts])
+        return f'[{content}]'
 
     def visit_Subscript(self, node: ast.Subscript) -> str:
         inner = self.visit(node.slice.value)
