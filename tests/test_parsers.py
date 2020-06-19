@@ -27,6 +27,6 @@ Returns:
 """
         )
         assert (
-            result['returns']
+            result['returns']['description']
             == 'the response data (list, dict or None): The ids and type of resource object(s) in this relationship. meta (dict): meta information about the response total (int): total records available in the relationship count (int): total records returned in the response limit (int): the page size offset (int): starting point of the page links (dict): paging links to prev and next page, plus link to current request'
         )
