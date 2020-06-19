@@ -126,7 +126,9 @@ class ModuleAnalyzer(ast.NodeVisitor):
                 'hidden': False,
             }
         )
-        doc = parse_google_docstring(ast.get_docstring(node), self.hide_undoc_args)
+        doc = parse_google_docstring(
+            ast.get_docstring(node), self.hide_undoc_args, self.get_qualified_name(node, node.name)
+        )
         result.update(
             {d: doc[d] for d in doc if d not in ['parameters', 'raises', 'returns', 'attributes']}
         )
@@ -179,13 +181,19 @@ class ModuleAnalyzer(ast.NodeVisitor):
             and not result['is_class_method']
         )
 
-        doc = parse_google_docstring(ast.get_docstring(node), self.hide_undoc_args)
+        doc = parse_google_docstring(
+            ast.get_docstring(node), self.hide_undoc_args, self.get_qualified_name(node, node.name)
+        )
         result.update({d: doc[d] for d in doc if d != 'parameters'})
 
         class_doc = ParsedDocstring({})
 
         if class_parent and node.name == '__init__':
-            class_doc = parse_google_docstring(ast.get_docstring(node.parent), self.hide_undoc_args)
+            class_doc = parse_google_docstring(
+                ast.get_docstring(node.parent),
+                self.hide_undoc_args,
+                self.get_qualified_name(node, node.name),
+            )
 
         if self.hide_private and node.name.startswith('_') and node.name != '__init__':
             result['hidden'] = True
