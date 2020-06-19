@@ -95,12 +95,22 @@ class ModuleAnalyzer(ast.NodeVisitor):
         except ValueError:
             start = end = node.lineno
 
-        start = min(node.lineno, start)
-        content = '\n'.join(self.lines[start - 1 : end])
+        start = min(node.lineno, start) - 1
+        content = '\n'.join(self.lines[start:end])
 
         if not content.strip().endswith(':'):
             end += 1
-            content = '\n'.join(self.lines[start - 1 : end])
+            content = '\n'.join(self.lines[start:end])
+
+        start_shift = 0
+        for backstep in range(1, len(node.decorator_list) + 1):
+            if start - backstep < 0:
+                break
+            if not self.lines[start - backstep].strip().startswith('@'):
+                break
+            start_shift = backstep
+        start -= start_shift
+        content = '\n'.join(self.lines[start:end])
 
         return left_align_block(content)
 
@@ -141,8 +151,7 @@ class ModuleAnalyzer(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> ParsedFunction:
         """convert a function into markdown"""
-
-        decorators = {self.visit(d) for d in node.decorator_list}
+        decorators = [self.visit(d) for d in node.decorator_list]
         result = ParsedFunction(
             {
                 'name': self.get_qualified_name(node, node.name),
