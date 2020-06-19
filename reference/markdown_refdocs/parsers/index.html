@@ -372,7 +372,9 @@
                 <h1 id="markdown_refdocsparsers">markdown_refdocs.parsers</h1>
 <h2 id="parse_google_docstring">parse_google_docstring()</h2>
 <p>parses a google-style docsting into a dictionary of the various sections</p>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">parse_google_docstring</span><span class="p">(</span><span class="n">docstring</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hide_undoc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParsedDocstring</span><span class="p">:</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">parse_google_docstring</span><span class="p">(</span>
+    <span class="n">docstring</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hide_undoc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">function_name</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParsedDocstring</span><span class="p">:</span>
 </code></pre></div>
 
 
@@ -380,6 +382,7 @@
 <ul>
 <li>docstring (<code>str</code>)</li>
 <li>hide_undoc (<code>bool</code>)</li>
+<li>function_name</li>
 </ul>
 <p><strong>Returns</strong></p>
 <ul>
