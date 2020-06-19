@@ -28,7 +28,7 @@ except Exception as err:
 
 setup(
     name='markdown_refdocs',
-    version='1.1.1',
+    version='1.1.2',
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages(),
