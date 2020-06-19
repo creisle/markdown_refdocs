@@ -6,8 +6,15 @@ from typing import Dict, List, Optional, Tuple, Union, cast
 from .links import create_relative_types_mapping, create_types_mapping
 from .markdown import module_to_markdown
 from .parsers import left_align_block, parse_google_docstring
-from .types import (ParsedClass, ParsedDocstring, ParsedFunction, ParsedModule,
-                    ParsedParameter, ParsedReturn, ParsedVariable)
+from .types import (
+    ParsedClass,
+    ParsedDocstring,
+    ParsedFunction,
+    ParsedModule,
+    ParsedParameter,
+    ParsedReturn,
+    ParsedVariable,
+)
 
 
 def get_by_name(name: str, list_to_search: List[Dict]) -> Optional[Dict]:
