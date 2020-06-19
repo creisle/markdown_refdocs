@@ -14,7 +14,9 @@ def left_align_block(block: str) -> str:
     return content
 
 
-def parse_google_docstring(docstring: str, hide_undoc: bool = True) -> ParsedDocstring:
+def parse_google_docstring(
+    docstring: str, hide_undoc: bool = True, function_name=''
+) -> ParsedDocstring:
     """
     parses a google-style docsting into a dictionary of the various sections
     """
@@ -96,8 +98,12 @@ def parse_google_docstring(docstring: str, hide_undoc: bool = True) -> ParsedDoc
     for i, line in enumerate(content['returns']):
         _, arg_type, arg_desc = re.match(r'^(([^:]+):)?\s*(.*)$', line).groups()
         if result['returns']:
-            raise AttributeError('unable to parse docstring with multiple returns')
-        result['returns'] = ParsedReturn({'type': arg_type, 'description': arg_desc})
+            result['returns']['description'] += ' ' + line
+        else:
+            print(
+                f'warning: {function_name} multiple return lines, being appended to the description'
+            )
+            result['returns'] = ParsedReturn({'type': arg_type, 'description': arg_desc})
 
     result['description'] = '\n'.join(content['desc'])
     result['note'] = '\n'.join(content['note'])
