@@ -1,8 +1,8 @@
 # Markdown Refdocs
 
-![Python package](https://github.com/creisle/markdown_refdocs/workflows/Python%20package/badge.svg?branch=master) ![Docs](https://github.com/creisle/markdown_refdocs/workflows/Docs/badge.svg?branch=master) [![PyPi](https://img.shields.io/pypi/v/markdown_refdocs.svg)](https://pypi.org/project/markdown-refdocs)
+![build](https://github.com/creisle/markdown_refdocs/workflows/build/badge.svg?branch=master) ![docs](https://github.com/creisle/markdown_refdocs/workflows/docs/badge.svg?branch=master) [![PyPi](https://img.shields.io/pypi/v/markdown_refdocs.svg)](https://pypi.org/project/markdown-refdocs)
 
-Extracts docstings and type annotations from a python package to generate reference documentation in markdown. 
+Extracts docstings and type annotations from a python package to generate reference documentation in markdown.
 See an example of this at: https://creisle.github.io/markdown_refdocs/
 
 ## Getting Started
@@ -41,7 +41,3 @@ markdown is simpler to read and write than writing them in RST. There is an awes
 number of plugins which extract docstrings from python files, however none of them
 are able to use the google docstring format which I prefer. If you're using a different docstring
 format you can check them out here on the [Mkdocs plugin wiki](https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins#api-documentation-building).
-
-
-
-
