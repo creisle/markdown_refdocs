@@ -22,7 +22,7 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip setuptools
         pip3 install .[docs]
-        markdown_refdocs markdown_refdocs -o docs/reference --links
+        markdown_refdocs markdown_refdocs -o docs/reference --link
         mkdocs build
 
     - name: Deploy
