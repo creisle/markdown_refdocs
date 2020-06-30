@@ -654,6 +654,48 @@ Parsed: TypedDict = TypedDict('Parsed', {'name': str, 'source_code': str, 'hidde
             parsed = parse_module_file('simple_module.py', '', hide_undoc=False)
             assert parsed['variables'] == expect_parsed
 
+    def test_multiline_docstring_desc(self):
+        data = """
+def prefix_split(text):
+    '''
+    Split the input text into a prefix and suffix, according to the following patterns:
+
+    If the input string is letters followed by numbers, return them separately in a tuple.
+    If the input string is only letters, return a tuple of ({letters}, None).
+    If the input string is only numbers, return a tuple of (None, {numbers}).
+
+    Otherwise return a tuple of Nones.
+
+    Args:
+        text (str): the input to split.
+    '''
+    pass
+"""
+        expected = """# simple_module
+
+## prefix\\_split()
+
+Split the input text into a prefix and suffix, according to the following patterns:
+
+If the input string is letters followed by numbers, return them separately in a tuple.
+If the input string is only letters, return a tuple of ({letters}, None).
+If the input string is only numbers, return a tuple of (None, {numbers}).
+
+Otherwise return a tuple of Nones.
+
+```python
+def prefix_split(text):
+```
+
+**Args**
+
+- text (`str`): the input to split.
+"""
+        with patch('builtins.open', mock_open(read_data=data)):
+            parsed = parse_module_file('simple_module.py', '', hide_undoc=False)
+            md = module_to_markdown(parsed)
+            assert md.strip() == expected.strip()
+
 
 class TestCommandInterface:
     def test_package_path(self, tmpdir):
