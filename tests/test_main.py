@@ -8,6 +8,42 @@ from markdown_refdocs.types import ParsedModule, ParsedVariable
 
 
 class TestParseModuleFile:
+    def test_multiple_decorators(self):
+        data = """
+from pyramid.view import (
+    view_config,
+)
+from pyramid.security import (
+    NO_PERMISSION_REQUIRED
+)
+
+@view_config(route_name='swagger', renderer='lims:templates/swagger.mak', permission=NO_PERMISSION_REQUIRED)
+@view_config(route_name='swagger.json', renderer='json', permission=NO_PERMISSION_REQUIRED)
+def swagger(request):
+    '''I am a docstring'''
+    pass
+"""
+        expected = """
+# simple_module
+
+## swagger()
+
+I am a docstring
+
+```python
+@view_config(route_name='swagger', renderer='lims:templates/swagger.mak', permission=NO_PERMISSION_REQUIRED)
+@view_config(route_name='swagger.json', renderer='json', permission=NO_PERMISSION_REQUIRED)
+def swagger(request):
+```
+
+**Args**
+
+- request
+"""
+        with patch('builtins.open', mock_open(read_data=data)):
+            md = module_to_markdown(parse_module_file('simple_module.py', ''))
+            assert md.strip() == expected.strip()
+
     def test_simple_module(self):
         data = """
 def simple_function(arg1: str, arg2: int):
@@ -456,6 +492,27 @@ def some_function(arg1: ast.AST):
 """
         with patch('builtins.open', mock_open(read_data=data)):
 
+            md = module_to_markdown(parse_module_file('simple_module.py', '', hide_undoc=False))
+            assert md.strip() == expected.strip()
+
+    def test_callable(self):
+        data = """
+class ResourceFieldDef(_ResourceFieldDefReq, total=False):
+    update: Callable[[Any, Union[int, str]], None]
+    deprecated: bool
+"""
+        expected = """# simple_module
+
+## class ResourceFieldDef
+
+**inherits** `_ResourceFieldDefReq`
+
+**Attributes**
+
+- update (`Callable[[Any, Union[int, str]], None]`)
+- deprecated (`bool`)
+"""
+        with patch('builtins.open', mock_open(read_data=data)):
             md = module_to_markdown(parse_module_file('simple_module.py', '', hide_undoc=False))
             assert md.strip() == expected.strip()
 

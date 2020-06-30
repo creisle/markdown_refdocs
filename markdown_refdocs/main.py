@@ -95,12 +95,22 @@ class ModuleAnalyzer(ast.NodeVisitor):
         except ValueError:
             start = end = node.lineno
 
-        start = min(node.lineno, start)
-        content = '\n'.join(self.lines[start - 1 : end])
+        start = min(node.lineno, start) - 1
+        content = '\n'.join(self.lines[start:end])
 
         if not content.strip().endswith(':'):
             end += 1
-            content = '\n'.join(self.lines[start - 1 : end])
+            content = '\n'.join(self.lines[start:end])
+
+        start_shift = 0
+        for backstep in range(1, len(node.decorator_list) + 1):
+            if start - backstep < 0:
+                break
+            if not self.lines[start - backstep].strip().startswith('@'):
+                break
+            start_shift = backstep
+        start -= start_shift
+        content = '\n'.join(self.lines[start:end])
 
         return left_align_block(content)
 
@@ -116,7 +126,9 @@ class ModuleAnalyzer(ast.NodeVisitor):
                 'hidden': False,
             }
         )
-        doc = parse_google_docstring(ast.get_docstring(node), self.hide_undoc_args)
+        doc = parse_google_docstring(
+            ast.get_docstring(node), self.hide_undoc_args, self.get_qualified_name(node, node.name)
+        )
         result.update(
             {d: doc[d] for d in doc if d not in ['parameters', 'raises', 'returns', 'attributes']}
         )
@@ -141,8 +153,7 @@ class ModuleAnalyzer(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> ParsedFunction:
         """convert a function into markdown"""
-
-        decorators = {self.visit(d) for d in node.decorator_list}
+        decorators = [self.visit(d) for d in node.decorator_list]
         result = ParsedFunction(
             {
                 'name': self.get_qualified_name(node, node.name),
@@ -170,13 +181,19 @@ class ModuleAnalyzer(ast.NodeVisitor):
             and not result['is_class_method']
         )
 
-        doc = parse_google_docstring(ast.get_docstring(node), self.hide_undoc_args)
+        doc = parse_google_docstring(
+            ast.get_docstring(node), self.hide_undoc_args, self.get_qualified_name(node, node.name)
+        )
         result.update({d: doc[d] for d in doc if d != 'parameters'})
 
         class_doc = ParsedDocstring({})
 
         if class_parent and node.name == '__init__':
-            class_doc = parse_google_docstring(ast.get_docstring(node.parent), self.hide_undoc_args)
+            class_doc = parse_google_docstring(
+                ast.get_docstring(node.parent),
+                self.hide_undoc_args,
+                self.get_qualified_name(node, node.name),
+            )
 
         if self.hide_private and node.name.startswith('_') and node.name != '__init__':
             result['hidden'] = True
@@ -266,6 +283,9 @@ class ModuleAnalyzer(ast.NodeVisitor):
     def visit_Name(self, node: ast.Name) -> str:
         return node.id
 
+    def visit_NameConstant(self, node: ast.NameConstant) -> str:
+        return node.value
+
     def visit_Str(self, node: ast.Str) -> str:
         return node.s
 
@@ -273,8 +293,12 @@ class ModuleAnalyzer(ast.NodeVisitor):
         return node
 
     def visit_Tuple(self, node: ast.Tuple) -> str:
-        content = ', '.join([self.visit(e) for e in node.elts])
+        content = ', '.join([str(self.visit(e)) for e in node.elts])
         return content
+
+    def visit_List(self, node: ast.List) -> str:
+        content = ', '.join([str(self.visit(e)) for e in node.elts])
+        return f'[{content}]'
 
     def visit_Subscript(self, node: ast.Subscript) -> str:
         inner = self.visit(node.slice.value)
