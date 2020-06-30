@@ -41,6 +41,27 @@ some desc
 '''
         )
 
+    def test_long_docstring(self):
+        desc = """Split the input text into a prefix and suffix, according to the following patterns:
+If the input string is letters followed by numbers, return them separately in a tuple.
+If the input string is only letters, return a tuple of ({letters}, None).
+If the input string is only numbers, return a tuple of (None, {numbers}).
+Otherwise return a tuple of Nones."""
+        md = function_to_markdown(
+            {'name': 'some_func', 'source_code': '', 'source_definition': '', 'description': desc}
+        )
+        assert (
+            md
+            == '''## some\\_func()
+
+Split the input text into a prefix and suffix, according to the following patterns:
+If the input string is letters followed by numbers, return them separately in a tuple.
+If the input string is only letters, return a tuple of ({letters}, None).
+If the input string is only numbers, return a tuple of (None, {numbers}).
+Otherwise return a tuple of Nones.
+'''
+        )
+
 
 class TestCreateTypeLink:
     def test_simple_link(self):

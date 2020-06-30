@@ -29,6 +29,8 @@ def parse_google_docstring(
     # start with the description
     for line in docstring.split('\n'):
         line = line.strip()
+        if not line and state is None:
+            continue
         new_state = line.lower().replace(':', '') if line.endswith(':') else ''
 
         if new_state in tags:
@@ -39,21 +41,15 @@ def parse_google_docstring(
 
         if state is None:
             # no elements yet
-            if not line:
-                continue
-            else:
-                state = 'desc'
-                content['desc'] = [line]
-                continue
-
-        if not line:
-            state = ''
-            continue
-
-        if state == 'example':
-            content[state][-1].append(line)
-        elif state in tags:
-            content[state].append(line)
+            state = 'desc'
+            content['desc'] = [line]
+        elif state == 'desc':
+            content['desc'].append(line)
+        elif line:
+            if state == 'example':
+                content[state][-1].append(line)
+            elif state in tags:
+                content[state].append(line)
 
     result = ParsedDocstring(
         {
@@ -105,7 +101,7 @@ def parse_google_docstring(
             )
             result['returns'] = ParsedReturn({'type': arg_type, 'description': arg_desc})
 
-    result['description'] = '\n'.join(content['desc'])
+    result['description'] = '\n'.join(content['desc']).strip()
     result['note'] = '\n'.join(content['note'])
 
     for i, example in enumerate(content['example']):
