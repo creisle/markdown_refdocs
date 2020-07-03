@@ -4,7 +4,7 @@ from unittest.mock import mock_open, patch
 
 from markdown_refdocs.main import command_interface, parse_module_file
 from markdown_refdocs.markdown import module_to_markdown
-from markdown_refdocs.types import ParsedModule, ParsedVariable
+from markdown_refdocs.types import ParsedVariable
 
 
 class TestParseModuleFile:
@@ -284,7 +284,6 @@ say something
                     'hidden': False,
                     'functions': [],
                     'examples': [],
-                    'note': '',
                     'attributes': [
                         {
                             'hidden': False,
@@ -550,10 +549,9 @@ class SomeType(TypedDict):
                     'description': '',
                     'hidden': False,
                     'examples': [],
-                    'note': '',
                     'attributes': [
-                        {'name': 'name', 'type': 'str', 'source_code': 'name: str',},
-                        {'name': 'parent', 'type': 'str', 'source_code': 'parent: str',},
+                        {'name': 'name', 'type': 'str', 'source_code': 'name: str'},
+                        {'name': 'parent', 'type': 'str', 'source_code': 'parent: str'},
                         {'name': 'grandparent', 'type': 'str', 'source_code': 'grandparent: str',},
                     ],
                     'functions': [],
@@ -603,7 +601,6 @@ class SomeType(TypedDict):
                     'name': 'SomeType',
                     'description': '',
                     'inherits': ['TypedDict'],
-                    'note': '',
                     'examples': [],
                     'hidden': False,
                     'functions': [],
