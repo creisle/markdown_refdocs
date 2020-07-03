@@ -8,6 +8,9 @@ from .types import ParsedModule
 def create_types_mapping(modules: Dict[str, ParsedModule]) -> Dict[str, str]:
     """
     Creates mapping of type name to links
+
+    Note:
+        This only links within a package
     """
     simple_mapping: Dict[str, Optional[str]] = {}
     qualified_mapping: Dict[str, Optional[str]] = {}
