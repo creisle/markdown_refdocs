@@ -75,3 +75,15 @@ class TestCreateTypeLink:
         types = {'type': link}
         md = create_type_link('List[type]', types)
         assert md == f'List\\[[type]({link})\\]'
+
+    def test_linking_as_dict_target(self):
+        link = './path/to/other/#class-someclass'
+        types = {'type': link}
+        md = create_type_link('Dict[str, type]', types)
+        assert md == f'Dict\\[`str`, [type]({link})\\]'
+
+    def test_tuple_of_links(self):
+        link = './path/to/other/#class-someclass'
+        types = {'type': link}
+        md = create_type_link('Tuple[type, type]', types)
+        assert md == f'Tuple\\[[type]({link}), [type]({link})\\]'
