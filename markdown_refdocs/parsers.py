@@ -1,7 +1,7 @@
 import re
 from typing import Any, Dict
 
-from .types import ParsedDocstring, ParsedParameter, ParsedReturn
+from .types import ParsedDocstring, ParsedParameter, ParsedReturn, ADMONITIONS
 
 
 def left_align_block(block: str) -> str:
@@ -9,7 +9,7 @@ def left_align_block(block: str) -> str:
     if not lines:
         return block
 
-    indent = re.match(r'(\s*).*', lines[0]).group(1)
+    indent = re.match(r'(\s*).*', lines[0]).group(1)  # type: ignore
     content = '\n'.join([line[len(indent) :] for line in lines])
     return content
 
@@ -59,8 +59,6 @@ def parse_google_docstring(
             'description': '',
             'returns': ParsedReturn({}),
             'examples': [],
-            'note': content.get('note', []),
-            'warning': content.get('warning', []),
         }
     )
 
@@ -68,7 +66,7 @@ def parse_google_docstring(
         parsed_args = []
         for i, arg in enumerate(content[tag]):
             try:
-                name, _, arg_type, arg_desc = re.match(
+                name, _, arg_type, arg_desc = re.match(  # type: ignore
                     r'^(\w+)(\s+\(([^)]+)\))?:\s*(.*)$', arg
                 ).groups()
                 parsed_args.append(
@@ -90,11 +88,11 @@ def parse_google_docstring(
             result[tag] = parsed_args
 
     for i, line in enumerate(content['raises']):
-        _, arg_type, arg_desc = re.match(r'^(([^:]+):)?\s*(.*)$', line).groups()
+        _, arg_type, arg_desc = re.match(r'^(([^:]+):)?\s*(.*)$', line).groups()  # type: ignore
         result['raises'].append(ParsedReturn({'type': arg_type, 'description': arg_desc}))
 
     for i, line in enumerate(content['returns']):
-        _, arg_type, arg_desc = re.match(r'^(([^:]+):)?\s*(.*)$', line).groups()
+        _, arg_type, arg_desc = re.match(r'^(([^:]+):)?\s*(.*)$', line).groups()  # type: ignore
         if result['returns']:
             result['returns']['description'] += ' ' + line
         else:
@@ -107,5 +105,9 @@ def parse_google_docstring(
 
     for i, example in enumerate(content['example']):
         result['examples'].append(left_align_block('\n'.join(example)))
+
+    for admon in ADMONITIONS:
+        if content.get(admon, []):
+            result[admon] = content[admon]
 
     return result

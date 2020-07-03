@@ -1,8 +1,8 @@
 import re
 from itertools import permutations
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
-from .types import ParsedClass, ParsedFunction, ParsedModule, ParsedVariable
+from .types import ParsedClass, ParsedFunction, ParsedModule, ParsedVariable, ADMONITIONS
 
 
 def _create_type_link(type_name: str, types_links: Dict[str, str] = {}) -> Tuple[str, bool]:
@@ -77,6 +77,17 @@ def argument_md(
     return md
 
 
+def admonitions_to_markdown(parsed: Dict[str, List[str]]) -> str:
+    md: List[str] = []
+    for admonition in ADMONITIONS:
+        if parsed.get(admonition, []):
+            md.append(f'!!! {admonition}')
+            for line in parsed[admonition]:
+                md.append(f'\t{line}')
+            md.append('')
+    return '\n'.join(md)
+
+
 def function_to_markdown(
     parsed: ParsedFunction, heading_level: int = 2, types_links: Dict[str, str] = {}
 ) -> str:
@@ -116,12 +127,9 @@ def function_to_markdown(
             md.append(f'```python\n{example}\n```\n')
         md.append('')
 
-    for admonition in ['note', 'warning']:
-        if parsed.get(admonition, []):
-            md.append(f'!!! {admonition}')
-            for line in parsed[admonition]:
-                md.append(f'\t{line}')
-            md.append('')
+    admon_md = admonitions_to_markdown(parsed)
+    if admon_md:
+        md.append(admon_md)
 
     return '\n'.join(md)
 
@@ -147,6 +155,10 @@ def class_to_markdown(parsed: ParsedClass, types_links: Dict[str, str] = {}) -> 
         for attr in parsed['attributes']:
             md.append(argument_md(types_links=types_links, **attr))
         md.append('')
+
+    admon_md = admonitions_to_markdown(parsed)
+    if admon_md:
+        md.append(admon_md)
 
     if parsed.get('functions', ''):
         for func in parsed['functions']:
