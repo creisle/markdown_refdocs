@@ -63,3 +63,6 @@ class ParsedModule(Parsed):
     classes: List[ParsedClass]
     functions: List[ParsedFunction]
     variables: List[ParsedVariable]
+
+
+ADMONITIONS = ['warning', 'note', 'info', 'bug', 'tip', 'question', 'failure', 'danger', 'quote']

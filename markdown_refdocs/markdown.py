@@ -1,50 +1,28 @@
 import re
-from itertools import permutations
-from typing import Dict, Tuple
+from typing import Dict, List
 
-from .types import ParsedClass, ParsedFunction, ParsedModule, ParsedVariable
-
-
-def _create_type_link(type_name: str, types_links: Dict[str, str] = {}) -> Tuple[str, bool]:
-    m = re.match(r'^Optional\[(.*)\]$', type_name)
-    if m:
-        inner_link, contains_link = _create_type_link(m.group(1), types_links)
-        if contains_link:
-            return f'Optional\\[{inner_link}\\]', True
-    if type_name in types_links:
-        return f'[{type_name}]({types_links[type_name]})', True
-
-    for typing_type in ['Dict', 'List', 'Iterable', 'Set', 'Optional']:
-        for link_type in types_links:
-            if f'{typing_type}[{link_type}]' == type_name:
-                inner_link, contains_link = _create_type_link(link_type, types_links)
-                if contains_link:
-                    return f'{typing_type}\\[{inner_link}\\]', True
-
-    for typing_type in ['str', 'Tuple', 'int']:
-        for link_type in types_links:
-            if f'Dict[{typing_type}, {link_type}]' == type_name:
-                inner_link, contains_link = _create_type_link(link_type, types_links)
-                if contains_link:
-                    return f'Dict\\[`{typing_type}`, {inner_link}\\]', True
-
-    for typing_type in ['Union', 'Tuple']:
-        for first, second in permutations(types_links.keys(), 2):
-            double_link = f'{typing_type}[{first}, {second}]'
-            if double_link == type_name:
-                first_link, contains_link = _create_type_link(first, types_links)
-                second_link, contains_other_link = _create_type_link(second, types_links)
-                if contains_link or contains_other_link:
-                    return f'{typing_type}\\[{first_link}, {second_link}\\]', True
-
-    return type_name, False
+from .types import ParsedClass, ParsedFunction, ParsedModule, ParsedVariable, ADMONITIONS
 
 
 def create_type_link(type_name: str, types_links: Dict[str, str] = {}) -> str:
-    type_link, has_link = _create_type_link(type_name, types_links)
-    if not has_link:
-        return f'`{type_link}`'
-    return type_link
+    tokens = re.split(r'(\[|\]|\s|,)', str(type_name))
+
+    linked = []
+    contains_link = False
+    for token in tokens:
+        if token in types_links:
+            contains_link = True
+            linked.append(f'[{token}]({types_links[token]})')
+        elif token in ['str', 'int', 'bool', 'float']:
+            linked.append(f'`{token}`')
+        elif token in [']', '[']:
+            linked.append(f'\\{token}')
+        else:
+            linked.append(token)
+
+    if not contains_link:
+        return f'`{type_name}`'
+    return ''.join(linked)
 
 
 def argument_md(
@@ -72,6 +50,17 @@ def argument_md(
     if description:
         md += f': {description}'
     return md
+
+
+def admonitions_to_markdown(parsed: Dict[str, List[str]]) -> str:
+    md: List[str] = []
+    for admonition in ADMONITIONS:
+        if parsed.get(admonition, []):
+            md.append(f'!!! {admonition}')
+            for line in parsed[admonition]:
+                md.append(f'\t{line}')
+            md.append('')
+    return '\n'.join(md)
 
 
 def function_to_markdown(
@@ -113,6 +102,10 @@ def function_to_markdown(
             md.append(f'```python\n{example}\n```\n')
         md.append('')
 
+    admon_md = admonitions_to_markdown(parsed)
+    if admon_md:
+        md.append(admon_md)
+
     return '\n'.join(md)
 
 
@@ -137,6 +130,10 @@ def class_to_markdown(parsed: ParsedClass, types_links: Dict[str, str] = {}) -> 
         for attr in parsed['attributes']:
             md.append(argument_md(types_links=types_links, **attr))
         md.append('')
+
+    admon_md = admonitions_to_markdown(parsed)
+    if admon_md:
+        md.append(admon_md)
 
     if parsed.get('functions', ''):
         for func in parsed['functions']:

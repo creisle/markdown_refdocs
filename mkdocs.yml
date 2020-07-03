@@ -9,6 +9,7 @@ nav:
       - markdown_refdocs.links: reference/markdown_refdocs/links.md
 markdown_extensions:
   - codehilite
+  - admonition
 theme:
   name: "material"
 repo_url: https://github.com/creisle/markdown_refdocs.git
