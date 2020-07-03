@@ -21,7 +21,7 @@ def parse_google_docstring(
     parses a google-style docsting into a dictionary of the various sections
     """
     state = None
-    tags = ['args', 'returns', 'raises', 'note', 'desc', 'example', 'attributes']
+    tags = ['args', 'returns', 'raises', 'note', 'desc', 'example', 'attributes', 'warning']
     content: Dict[str, Any] = {tag: [] for tag in tags}
 
     docstring = (docstring if docstring else '').strip()
@@ -59,6 +59,8 @@ def parse_google_docstring(
             'description': '',
             'returns': ParsedReturn({}),
             'examples': [],
+            'note': content.get('note', []),
+            'warning': content.get('warning', []),
         }
     )
 
@@ -102,7 +104,6 @@ def parse_google_docstring(
             result['returns'] = ParsedReturn({'type': arg_type, 'description': arg_desc})
 
     result['description'] = '\n'.join(content['desc']).strip()
-    result['note'] = '\n'.join(content['note'])
 
     for i, example in enumerate(content['example']):
         result['examples'].append(left_align_block('\n'.join(example)))

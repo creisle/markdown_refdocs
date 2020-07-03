@@ -116,6 +116,13 @@ def function_to_markdown(
             md.append(f'```python\n{example}\n```\n')
         md.append('')
 
+    for admonition in ['note', 'warning']:
+        if parsed.get(admonition, []):
+            md.append(f'!!! {admonition}')
+            for line in parsed[admonition]:
+                md.append(f'\t{line}')
+            md.append('')
+
     return '\n'.join(md)
 
 
