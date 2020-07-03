@@ -1,6 +1,6 @@
 # Markdown Refdocs
 
-![build](https://github.com/creisle/markdown_refdocs/workflows/build/badge.svg?branch=master) [![PyPi](https://img.shields.io/pypi/v/markdown_refdocs.svg)](https://pypi.org/project/markdown-refdocs) [![codecov](https://codecov.io/gh/creisle/markdown_refdocs/branch/master/graph/badge.svg)](https://codecov.io/gh/creisle/markdown_refdocs)
+![build](https://github.com/creisle/markdown_refdocs/workflows/build/badge.svg) [![PyPi](https://img.shields.io/pypi/v/markdown_refdocs.svg)](https://pypi.org/project/markdown-refdocs) [![codecov](https://codecov.io/gh/creisle/markdown_refdocs/branch/master/graph/badge.svg)](https://codecov.io/gh/creisle/markdown_refdocs)
 
 Extracts docstings and type annotations from a python package to generate reference documentation in markdown.
 See an example of this at: https://creisle.github.io/markdown_refdocs/
