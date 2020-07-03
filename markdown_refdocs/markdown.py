@@ -41,10 +41,13 @@ def _create_type_link(type_name: str, types_links: Dict[str, str] = {}) -> Tuple
 
 
 def create_type_link(type_name: str, types_links: Dict[str, str] = {}) -> str:
-    type_link, has_link = _create_type_link(type_name, types_links)
-    if not has_link:
-        return f'`{type_link}`'
-    return type_link
+    try:
+        type_link, has_link = _create_type_link(type_name, types_links)
+        if not has_link:
+            return f'`{type_link}`'
+        return type_link
+    except Exception:
+        return f'`{type_name}`'
 
 
 def argument_md(
