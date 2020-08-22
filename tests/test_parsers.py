@@ -61,5 +61,4 @@ If the input string is only letters, return a tuple of ({letters}, None).
 If the input string is only numbers, return a tuple of (None, {numbers}).
 Otherwise return a tuple of Nones."""
         assert result['description'] == expected
-        print(result.keys())
         assert len(result['examples']) == 4
