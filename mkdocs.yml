@@ -1,6 +1,7 @@
 site_name: Markdown Refdocs
 nav:
   - Home: index.md
+  - Examples: examples.md
   - Reference:
       - markdown_refdocs.main: reference/markdown_refdocs/main.md
       - markdown_refdocs.parsers: reference/markdown_refdocs/parsers.md
