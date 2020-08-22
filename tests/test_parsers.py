@@ -46,8 +46,11 @@ Returns:
         tuple: The result of splitting the input string.
     Examples:
         prefix_split('A12345') == ('A', '12345')
+
         prefix_split('HTMCP_1') == ('HTMCP_', '1')
+
         prefix_split('ABC') == ('ABC', None)
+
         prefix_split('12345') == (None, '12345')
         prefix_split('A123B') == (None, None)"""
         )
@@ -58,3 +61,5 @@ If the input string is only letters, return a tuple of ({letters}, None).
 If the input string is only numbers, return a tuple of (None, {numbers}).
 Otherwise return a tuple of Nones."""
         assert result['description'] == expected
+        print(result.keys())
+        assert len(result['examples']) == 4

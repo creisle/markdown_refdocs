@@ -21,7 +21,17 @@ def parse_google_docstring(
     parses a google-style docsting into a dictionary of the various sections
     """
     state = None
-    tags = ['args', 'returns', 'raises', 'note', 'desc', 'example', 'attributes', 'warning']
+    tags = [
+        'args',
+        'returns',
+        'raises',
+        'note',
+        'desc',
+        'example',
+        'examples',
+        'attributes',
+        'warning',
+    ]
     content: Dict[str, Any] = {tag: [] for tag in tags}
 
     docstring = (docstring if docstring else '').strip()
@@ -35,7 +45,7 @@ def parse_google_docstring(
 
         if new_state in tags:
             state = new_state
-            if state == 'example':
+            if state == 'examples' or state == 'example':
                 content[state].append([])
             continue
 
@@ -46,10 +56,13 @@ def parse_google_docstring(
         elif state == 'desc':
             content['desc'].append(line)
         elif line:
-            if state == 'example':
+            if state == 'examples' or state == 'example':
                 content[state][-1].append(line)
             elif state in tags:
                 content[state].append(line)
+        elif state == 'examples':
+            # split "examples" by blank new lines
+            content[state].append([])
 
     result = ParsedDocstring(
         {
@@ -103,7 +116,7 @@ def parse_google_docstring(
 
     result['description'] = '\n'.join(content['desc']).strip()
 
-    for i, example in enumerate(content['example']):
+    for example in content.get('example', []) + content.get('examples', []):
         result['examples'].append(left_align_block('\n'.join(example)))
 
     for admon in ADMONITIONS:
