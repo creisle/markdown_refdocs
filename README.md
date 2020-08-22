@@ -21,6 +21,37 @@ options documentation
 markdown_refdocs -h
 ```
 
+Generate markdown reference documentation from your python package like so
+
+```bash
+markdown_refdocs /path/to/python/package -o /path/to/output/dir
+```
+
+This will generate markdown files under `/path/to/output/dir` which can
+be used standalone or incorporated in a [Mkdocs](https://www.mkdocs.org/) build
+
+## Examples
+
+Documentation for this package itself can be generated using this tool itself
+
+```bash
+markdown_refdocs markdown_refdocs -o docs/reference
+```
+
+This will build the following files (1 file per python sub-module)
+
+```text
+docs/reference/
+└── markdown_refdocs
+    ├── links.md
+    ├── main.md
+    ├── markdown.md
+    ├── parsers.md
+    └── types.md
+```
+
+See a live demo of this under: https://creisle.github.io/markdown_refdocs
+
 ## Features
 
 - parses google-style docstrings
