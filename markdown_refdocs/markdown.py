@@ -53,6 +53,14 @@ def argument_md(
 
 
 def admonitions_to_markdown(parsed: Dict[str, List[str]]) -> str:
+    """
+    Generate markdown-style admonitions
+
+    Examples:
+        admonitions_to_markdown({'note': ['make a note of this']})
+
+        admonitions_to_markdown({'warning': ['this is important']})
+    """
     md: List[str] = []
     for admonition in ADMONITIONS:
         if parsed.get(admonition, []):

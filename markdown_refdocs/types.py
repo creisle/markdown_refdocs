@@ -44,6 +44,7 @@ class ParsedDocstring(TypedDict):
     returns: ParsedReturn
     parameters: List[ParsedParameter]
     attributes: List[ParsedParameter]
+    todo: List[str]
 
 
 class ParsedVariable(Parsed):
@@ -65,4 +66,15 @@ class ParsedModule(Parsed):
     variables: List[ParsedVariable]
 
 
-ADMONITIONS = ['warning', 'note', 'info', 'bug', 'tip', 'question', 'failure', 'danger', 'quote']
+ADMONITIONS = [
+    'warning',
+    'note',
+    'info',
+    'bug',
+    'tip',
+    'question',
+    'failure',
+    'danger',
+    'quote',
+    'todo',
+]
