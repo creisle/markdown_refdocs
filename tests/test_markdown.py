@@ -1,4 +1,9 @@
-from markdown_refdocs.markdown import constant_to_markdown, create_type_link, function_to_markdown
+from markdown_refdocs.markdown import (
+    constant_to_markdown,
+    create_type_link,
+    function_to_markdown,
+    admonitions_to_markdown,
+)
 
 
 class TestConstantToMarkdown:
@@ -87,3 +92,24 @@ class TestCreateTypeLink:
         types = {'type': link}
         md = create_type_link('Tuple[type, type]', types)
         assert md == f'Tuple\\[[type]({link}), [type]({link})\\]'
+
+
+class TestAdmonitions:
+    def test_todo(self):
+        parsed = {
+            'todo': [
+                '* validate pk_col exists on table',
+                '* validate group_by is a column/list of columns on table',
+                '* validate filter_col exists on table',
+                '* validate dist_table joins to table?',
+            ]
+        }
+
+        expected = """!!! todo
+\t* validate pk_col exists on table
+\t* validate group_by is a column/list of columns on table
+\t* validate filter_col exists on table
+\t* validate dist_table joins to table?
+"""
+        actual = admonitions_to_markdown(parsed)
+        assert actual == expected

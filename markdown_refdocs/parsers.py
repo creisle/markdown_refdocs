@@ -19,6 +19,11 @@ def parse_google_docstring(
 ) -> ParsedDocstring:
     """
     parses a google-style docsting into a dictionary of the various sections
+
+    Args:
+        docstring: the docstring to parse
+        hide_undoc: if True, undocumented arguments will be marked as hidden
+        function_name: name of the function the docstring is for (only used in debugging)
     """
     state = None
     tags = [
@@ -31,6 +36,7 @@ def parse_google_docstring(
         'examples',
         'attributes',
         'warning',
+        'todo',
     ]
     content: Dict[str, Any] = {tag: [] for tag in tags}
 

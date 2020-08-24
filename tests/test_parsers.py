@@ -62,3 +62,24 @@ If the input string is only numbers, return a tuple of (None, {numbers}).
 Otherwise return a tuple of Nones."""
         assert result['description'] == expected
         assert len(result['examples']) == 4
+
+    def test_todo(self):
+        docstring = """
+validator for pk_select endpoint
+Todo:
+    * validate pk_col exists on table
+    * validate group_by is a column/list of columns on table
+    * validate filter_col exists on table
+    * validate dist_table joins to table?
+"""
+        result = parse_google_docstring(docstring)
+
+        expected = [
+            '* validate pk_col exists on table',
+            '* validate group_by is a column/list of columns on table',
+            '* validate filter_col exists on table',
+            '* validate dist_table joins to table?',
+        ]
+
+        for index, line in enumerate(result['todo']):
+            assert line == expected[index]
