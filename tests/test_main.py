@@ -718,7 +718,7 @@ class TestCommandInterface:
             assert os.path.exists(module)
 
 
-@pytest.mark.parametrize('name', ['multiple_decorators'])
+@pytest.mark.parametrize('name', ['multiple_decorators', 'type_alias'])
 def test_snippets(name):
     base_dir = os.path.join(os.path.dirname(__file__), 'snippets')
     file_prefix = os.path.join(base_dir, name)
