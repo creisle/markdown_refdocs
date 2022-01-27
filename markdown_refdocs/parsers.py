@@ -1,7 +1,7 @@
 import re
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-from .types import ParsedDocstring, ParsedParameter, ParsedReturn, ADMONITIONS
+from .types import ADMONITIONS, ParsedDocstring, ParsedParameter, ParsedReturn
 
 
 def left_align_block(block: str) -> str:
@@ -15,7 +15,7 @@ def left_align_block(block: str) -> str:
 
 
 def parse_google_docstring(
-    docstring: str, hide_undoc: bool = True, function_name=''
+    docstring: Optional[str], hide_undoc: bool = True, function_name=''
 ) -> ParsedDocstring:
     """
     parses a google-style docsting into a dictionary of the various sections
