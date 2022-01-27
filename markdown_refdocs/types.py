@@ -5,21 +5,23 @@ try:
 except ImportError:
     from typing_extensions import TypedDict
 
-Parsed: TypedDict = TypedDict('Parsed', {'name': str, 'source_code': str, 'hidden': bool})
+Parsed: TypedDict = TypedDict(
+    'Parsed', {'name': str, 'source_code': str, 'hidden': bool}, total=False
+)
 
 
-class ParsedParameter(Parsed):
+class ParsedParameter(Parsed, total=False):
     default_value: str
     type: str
     description: str
 
 
-class ParsedReturn(TypedDict):
+class ParsedReturn(TypedDict, total=False):
     type: str
     description: str
 
 
-class ParsedFunction(Parsed):
+class ParsedFunction(Parsed, total=False):
     """
     Result of the combination of parsing the source code and combining with the docstring of a function
     """
@@ -36,7 +38,7 @@ class ParsedFunction(Parsed):
     is_getter: bool
 
 
-class ParsedDocstring(TypedDict):
+class ParsedDocstring(TypedDict, total=False):
     description: str
     note: str
     examples: List[str]
@@ -47,23 +49,26 @@ class ParsedDocstring(TypedDict):
     todo: List[str]
 
 
-class ParsedVariable(Parsed):
+class ParsedVariable(Parsed, total=False):
     type: str
     description: str
     value: str
+    attributes: List[Parsed]
 
 
-class ParsedClass(Parsed):
+class ParsedClass(Parsed, total=False):
     functions: List[ParsedFunction]
     variables: List[ParsedVariable]
     description: str
     inherits: List[str]
+    attributes: List[Parsed]
 
 
-class ParsedModule(Parsed):
+class ParsedModule(Parsed, total=False):
     classes: List[ParsedClass]
     functions: List[ParsedFunction]
     variables: List[ParsedVariable]
+    description: str
 
 
 ADMONITIONS = [
