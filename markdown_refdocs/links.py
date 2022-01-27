@@ -15,7 +15,7 @@ def create_types_mapping(modules: Dict[str, ParsedModule]) -> Dict[str, str]:
     simple_mapping: Dict[str, Optional[str]] = {}
     qualified_mapping: Dict[str, Optional[str]] = {}
 
-    def add_to_mappings(module: ParsedModule, short_name: str, prefix: str = 'class-'):
+    def add_to_mappings(path, module: ParsedModule, short_name: str, prefix: str = 'class-'):
         qualified_name = f'{module["name"]}.{short_name}'
         url = f'./{path}/#{prefix}{short_name.lower()}'
 
@@ -32,10 +32,10 @@ def create_types_mapping(modules: Dict[str, ParsedModule]) -> Dict[str, str]:
     for path, module in modules.items():
         for var in module.get('variables', []):
             if re.match(r'^[A-Z][a-z]', var['name']):
-                add_to_mappings(module, var['name'], '')
+                add_to_mappings(path, module, var['name'], '')
 
         for cls in module.get('classes', []):
-            add_to_mappings(module, cls['name'])
+            add_to_mappings(path, module, cls['name'])
 
     simple_mapping.update(qualified_mapping)
     return {k: v for (k, v) in simple_mapping.items() if v is not None}

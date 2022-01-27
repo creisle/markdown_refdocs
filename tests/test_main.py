@@ -2,6 +2,7 @@ import os
 import sys
 from unittest.mock import mock_open, patch
 
+import pytest
 from markdown_refdocs.main import command_interface, parse_module_file
 from markdown_refdocs.markdown import module_to_markdown
 from markdown_refdocs.types import ParsedVariable
@@ -552,7 +553,11 @@ class SomeType(TypedDict):
                     'attributes': [
                         {'name': 'name', 'type': 'str', 'source_code': 'name: str'},
                         {'name': 'parent', 'type': 'str', 'source_code': 'parent: str'},
-                        {'name': 'grandparent', 'type': 'str', 'source_code': 'grandparent: str',},
+                        {
+                            'name': 'grandparent',
+                            'type': 'str',
+                            'source_code': 'grandparent: str',
+                        },
                     ],
                     'functions': [],
                 }
@@ -711,3 +716,14 @@ class TestCommandInterface:
 
         for module in modules:
             assert os.path.exists(module)
+
+
+@pytest.mark.parametrize('name', ['multiple_decorators'])
+def test_snippets(name):
+    base_dir = os.path.join(os.path.dirname(__file__), 'snippets')
+    file_prefix = os.path.join(base_dir, name)
+    with open(file_prefix + '.md', 'r') as fh:
+        md_expected = fh.read()
+    parsed = parse_module_file(file_prefix + '.py', base_dir, hide_undoc=False)
+    md_actual = module_to_markdown(parsed)
+    assert md_actual == md_expected

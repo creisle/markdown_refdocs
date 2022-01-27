@@ -17,6 +17,10 @@ from .types import (
 )
 
 
+class LinkedAstNode(ast.AST):
+    parent: 'LinkedAstNode'
+
+
 def get_by_name(name: str, list_to_search: List[Dict]) -> Optional[Dict]:
     for item in list_to_search:
         if item['name'] == name:
@@ -49,9 +53,11 @@ class ModuleAnalyzer(ast.NodeVisitor):
         namespace_headers: bool = False,
     ):
         print('processing module', filename)
-        self.name = (
-            filename.replace('.py', '').replace('/', '.')[len(prefix) :].replace('.__init__', '')
-        )
+        name = filename.replace(prefix, '')
+        if name.startswith('/'):
+            name = name[1:]
+
+        self.name = name.replace('.py', '').replace('.__init__', '')
         self.hide_private = hide_private
         self.hide_undoc = hide_undoc
         self.hide_undoc_args = hide_undoc_args
@@ -61,7 +67,7 @@ class ModuleAnalyzer(ast.NodeVisitor):
             self.content = source.read()
             self.lines = self.content.split('\n')
 
-    def get_qualified_name(self, node: ast.AST, name: str) -> Optional[str]:
+    def get_qualified_name(self, node: LinkedAstNode, name: str) -> Optional[str]:
         parents = []
         if not node.parent:
             return None
@@ -283,7 +289,7 @@ class ModuleAnalyzer(ast.NodeVisitor):
     def visit_Name(self, node: ast.Name) -> str:
         return node.id
 
-    def visit_NameConstant(self, node: ast.NameConstant) -> str:
+    def visit_Constant(self, node: ast.Constant) -> str:
         return node.value
 
     def visit_Str(self, node: ast.Str) -> str:
@@ -301,7 +307,10 @@ class ModuleAnalyzer(ast.NodeVisitor):
         return f'[{content}]'
 
     def visit_Subscript(self, node: ast.Subscript) -> str:
-        inner = self.visit(node.slice.value)
+        try:
+            inner = self.visit(node.slice.value)  # python 3.9+ this was changed
+        except AttributeError:
+            inner = self.visit(node.slice)
         return f'{self.visit(node.value)}[{inner}]'
 
     def visit_Assign(self, node: ast.Assign) -> List[ParsedVariable]:
