@@ -1,6 +1,7 @@
 .vscode
 tmp
-venv
+.venv*
+venv*
 *.egg-info
 *.pyc
 *__pycache__*
